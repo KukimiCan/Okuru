@@ -6,23 +6,25 @@
 
 - main に直接 push しない
 - `.env` は commit しない
-- 1機能ごとに branch を分ける
+- 1 Issue ごとに branch を分ける
 - Pull Request を通して main に入れる
 
 ## ブランチ命名ルール
 
 以下のような名前にします。
 
-- `feature/consultation-form`
-- `feature/story-list`
-- `fix/cors-error`
-- `chore/update-docs`
+- `feature/1-project-structure`
+- `feature/4-ai-consultation-form`
+- `fix/23-gemini-response-error`
+- `chore/48-release-checklist`
 
 ルール:
 
 - `feature/` は新機能
 - `fix/` は不具合修正
 - `chore/` は設定やドキュメントの更新
+- できれば Issue 番号を入れる
+- Issue の内容が分かる英単語を含める
 
 ## commit message のルール
 
@@ -45,7 +47,7 @@
 Pull Request には次の内容を書くと分かりやすいです。
 
 - 何を追加したか
-- どこを変更したか
+- どの Issue に対応しているか
 - 動作確認の方法
 - 残っている課題
 
@@ -92,6 +94,13 @@ Pull Request には次の内容を書くと分かりやすいです。
 ## 事故を防ぐための小ルール
 
 - いきなり main で作業しない
+- Issue を見てから branch を切る
 - 大きな変更は小さく分ける
 - PR を作る前に `git status` を見る
 - 不要なファイルを一緒に commit しない
+
+## Issue とのつなぎ方
+
+- 作業を始める前に `docs/tasks.md` から Issue を1つ選ぶ
+- ブランチ名と PR 本文に Issue 番号を入れる
+- 完了したら Issue に PR を関連付ける

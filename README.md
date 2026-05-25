@@ -20,14 +20,22 @@ Okuru は、AIの提案と人間のリアルな経験談を組み合わせて、
 
 ## ドキュメント一覧
 
-- `docs/spec.md`: アプリ全体の仕様
-- `docs/api.md`: API仕様
-- `docs/db.md`: DB設計
-- `docs/tasks.md`: タスク一覧
-- `docs/project-structure.md`: フォルダ・ファイル構成の説明
-- `docs/development-guide.md`: 開発の進め方
-- `docs/git-workflow.md`: Git / GitHub の運用ルール
-- `docs/troubleshooting.md`: よくあるエラーと対処法
+- [docs/spec.md](docs/spec.md): アプリ全体の仕様
+- [docs/api.md](docs/api.md): API仕様
+- [docs/db.md](docs/db.md): DB設計
+- [docs/tasks.md](docs/tasks.md): タスク一覧
+- [docs/project-structure.md](docs/project-structure.md): フォルダ・ファイル構成の説明
+- [docs/development-guide.md](docs/development-guide.md): 開発の進め方
+- [docs/git-workflow.md](docs/git-workflow.md): Git / GitHub の運用ルール
+- [docs/troubleshooting.md](docs/troubleshooting.md): よくあるエラーと対処法
+
+## 開発の流れ
+
+1. `docs/tasks.md` から担当する Issue を選ぶ
+2. Issue 名に合わせて feature ブランチを切る
+3. 実装後に PR を作成して main へ戻す
+
+Issue 起点でブランチと PR を作ると、誰が何を進めているか分かりやすくなります。
 
 
 ## 技術スタック
@@ -39,6 +47,22 @@ Okuru は、AIの提案と人間のリアルな経験談を組み合わせて、
 - Deploy: Vercel, Render または Railway
 
 ## プロジェクト構成
+
+### 主要フォルダ
+
+- [docs/](docs/): 仕様書と開発ガイド
+- [frontend/](frontend/): React + Vite のフロントエンド
+- [frontend/src/pages/](frontend/src/pages/): 各画面
+- [frontend/src/components/](frontend/src/components/): 共通UI部品
+- [frontend/src/features/](frontend/src/features/): 機能ごとのまとまり
+- [frontend/src/services/](frontend/src/services/): API 呼び出し
+- [frontend/src/types/](frontend/src/types/): 型定義
+- [backend/](backend/): FastAPI のバックエンド
+- [backend/app/api/routes/](backend/app/api/routes/): API ルート
+- [backend/app/schemas/](backend/app/schemas/): request / response 型
+- [backend/app/services/](backend/app/services/): Gemini や認証などの処理
+- [backend/app/crud/](backend/app/crud/): DB 操作
+- [backend/tests/](backend/tests/): テスト
 
 ```text
 Okuru/
