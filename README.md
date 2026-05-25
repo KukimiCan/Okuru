@@ -17,7 +17,6 @@ Okuru は、AIの提案と人間のリアルな経験談を組み合わせて、
 - 自分の相談履歴・体験談の閲覧
 - マイページ、いいね機能などは余裕があれば追加
 
-
 ## ドキュメント一覧
 
 - [docs/spec.md](docs/spec.md): アプリ全体の仕様
@@ -36,7 +35,6 @@ Okuru は、AIの提案と人間のリアルな経験談を組み合わせて、
 3. 実装後に PR を作成して main へ戻す
 
 Issue 起点でブランチと PR を作ると、誰が何を進めているか分かりやすくなります。
-
 
 ## 技術スタック
 
@@ -221,7 +219,6 @@ uvicorn app.main:app --reload --port 8000
 - `GET /api/me/stories`: 自分の体験談一覧の取得
 
 認証が必要なAPIでは、`Authorization: Bearer <supabase_jwt>` を付与します。
-
 
 ## 補足
 
