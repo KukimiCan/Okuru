@@ -3,10 +3,12 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import { signInWithEmail } from "../services/authService";
 import { isSupabaseConfigured } from "../lib/supabase";
+import { useAuth } from "../features/auth/AuthContext";
 
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -32,6 +34,18 @@ export function LoginPage() {
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (user) {
+    return (
+      <section className="form-page">
+        <div>
+          <p className="placeholder-label">Account</p>
+          <h1>ログイン済みです</h1>
+          <p>このアカウントで認証が必要なページを利用できます。</p>
+        </div>
+      </section>
+    );
   }
 
   return (
