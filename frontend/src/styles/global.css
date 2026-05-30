@@ -293,6 +293,37 @@ a {
   margin: 0;
 }
 
+.detail-list {
+  background: #ffffff;
+  border: 1px solid #d9e2ec;
+  border-radius: 8px;
+  display: grid;
+  gap: 0;
+  margin: 0;
+  max-width: 760px;
+}
+
+.detail-list div {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 160px 1fr;
+  padding: 14px 16px;
+}
+
+.detail-list div + div {
+  border-top: 1px solid #d9e2ec;
+}
+
+.detail-list dt {
+  color: #334e68;
+  font-weight: 800;
+}
+
+.detail-list dd {
+  color: #52606d;
+  margin: 0;
+}
+
 .filter-bar {
   display: grid;
   gap: 14px;
@@ -327,6 +358,10 @@ a {
   }
 
   .filter-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-list div {
     grid-template-columns: 1fr;
   }
 }
