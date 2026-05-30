@@ -293,6 +293,17 @@ a {
   margin: 0;
 }
 
+.filter-bar {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(220px, 2fr) repeat(4, minmax(140px, 1fr));
+}
+
+.count-label {
+  color: #52606d;
+  font-weight: 800;
+}
+
 @media (max-width: 720px) {
   .site-header {
     align-items: flex-start;
@@ -312,6 +323,10 @@ a {
   }
 
   .card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-bar {
     grid-template-columns: 1fr;
   }
 }
