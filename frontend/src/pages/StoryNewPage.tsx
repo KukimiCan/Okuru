@@ -1,6 +1,8 @@
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { FormErrorList } from "../components/forms/FormErrorList";
+import { hasValidationErrors, validateStoryInput, type ValidationErrors } from "../lib/validation";
 import { createStory } from "../services/storyService";
 import type { StoryInput, StoryResult } from "../types/story";
 
@@ -19,6 +21,7 @@ const initialForm = {
 export function StoryNewPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState(initialForm);
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -49,16 +52,19 @@ export function StoryNewPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage("");
+    setValidationErrors({});
 
-    if (!form.title || !form.relationship || !form.purpose || !form.gift_item || !form.body) {
-      setErrorMessage("タイトル、関係性、目的、贈ったもの、本文を入力してください。");
+    const input = buildInput();
+    const errors = validateStoryInput(input);
+    if (hasValidationErrors(errors)) {
+      setValidationErrors(errors);
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const created = await createStory(buildInput());
+      const created = await createStory(input);
       navigate(`/stories/${created.id}`);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "体験談の投稿に失敗しました。");
@@ -172,6 +178,8 @@ export function StoryNewPage() {
             />
           </label>
         </div>
+
+        <FormErrorList errors={validationErrors} />
 
         {errorMessage ? (
           <p className="form-error" role="alert">

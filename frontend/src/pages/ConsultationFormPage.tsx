@@ -1,6 +1,12 @@
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { FormErrorList } from "../components/forms/FormErrorList";
+import {
+  hasValidationErrors,
+  validateConsultationInput,
+  type ValidationErrors,
+} from "../lib/validation";
 import { createConsultation } from "../services/consultationService";
 import type { ConsultationInput } from "../types/consultation";
 
@@ -20,6 +26,7 @@ const initialForm = {
 export function ConsultationFormPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState(initialForm);
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -52,21 +59,19 @@ export function ConsultationFormPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage("");
+    setValidationErrors({});
 
-    if (!form.relationship || !form.purpose || !form.desired_mood) {
-      setErrorMessage("関係性、目的、希望する雰囲気を入力してください。");
-      return;
-    }
-
-    if (Number(form.budget_min) > Number(form.budget_max)) {
-      setErrorMessage("予算の下限は上限以下にしてください。");
+    const input = buildInput();
+    const errors = validateConsultationInput(input);
+    if (hasValidationErrors(errors)) {
+      setValidationErrors(errors);
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const result = await createConsultation(buildInput());
+      const result = await createConsultation(input);
       navigate(`/consultations/${result.consultation_id}`, {
         state: { consultation: result },
       });
@@ -196,6 +201,8 @@ export function ConsultationFormPage() {
             value={form.note}
           />
         </label>
+
+        <FormErrorList errors={validationErrors} />
 
         {errorMessage ? (
           <p className="form-error" role="alert">
