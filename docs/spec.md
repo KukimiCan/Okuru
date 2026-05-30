@@ -219,47 +219,86 @@ MVPでは主に `private` と `public` を使い、`unlisted` は DB 上に用�
 ### 12.1 設計方針
 
 - 回答は必ず JSON で返す
+- 余計な説明や会話文を含めない
+- トップレベルは `output` に統一する
 - 候補数は 3 件前後を基本とする
 - 予算超過を避ける
 - 相手の年齢層や関係性に合わない提案を減らす
 - 抽象的な表現だけで終わらず、渡し方や注意点まで返す
 
-### 12.2 入力の考え方
+### 12.2 system prompt の整理
 
-システム側で以下を整理して AI に渡す。
+- AI はギフト提案アシスタントとして振る舞う
+- 必ず JSON のみを出力する
+- `output` に指定した構造を厳密に守る
+- 余計な説明や会話文を含めない
+- 例外があっても JSON で返す
 
-- recipient_age_group
-- recipient_gender
-- relationship
-- purpose
-- budget_min
-- budget_max
-- hobbies
-- avoid_items
-- desired_mood
-- note
+### 12.3 入力の考え方
 
-### 12.3 出力JSONの想定形
+システム側で以下を整理して AI に渡す。リクエストは `input` オブジェクトとして構造化する。
 
 ```json
 {
-  "summary": "全体の要約",
-  "gift_candidates": [
-    {
-      "name": "候補名",
-      "reason": "おすすめ理由",
-      "budget_range": "おおよその価格帯",
-      "caution": "注意点",
-      "suitable_for": "向いている相手",
-      "message": "渡すときの一言"
-    }
-  ],
-  "tips": ["選び方のコツ"],
-  "avoid": ["避けた方がよいこと"]
+  "input": {
+    "recipient_age_group": "20s",
+    "recipient_gender": "unspecified",
+    "relationship": "friend",
+    "purpose": "birthday",
+    "budget_min": 3000,
+    "budget_max": 5000,
+    "hobbies": ["coffee", "reading"],
+    "avoid_items": ["香りが強いもの", "大きくて置き場所に困るもの"],
+    "desired_mood": "practical",
+    "note": "仕事が忙しい人です"
+  }
 }
 ```
 
-### 12.4 エラー時の扱い
+### 12.4 出力 JSON の想定形
+
+AI は以下の構造を返す。トップレベルは `output` で、JSON 形式のみを出力する。
+
+```json
+{
+  "output": {
+    "summary": "",
+    "gift_candidates": [
+      {
+        "name": "",
+        "reason": "",
+        "budget_range": "",
+        "caution": "",
+        "suitable_for": "",
+        "message": ""
+      }
+    ],
+    "tips": [""],
+    "avoid": [""]
+  }
+}
+```
+
+- `summary`: 提案全体の要約
+- `gift_candidates`: ギフト候補の配列
+- `tips`: 選び方や渡し方のコツ
+- `avoid`: 避けるべきポイント
+
+### 12.5 禁止事項 / 注意事項
+
+- `output` 以外のトップレベルキーを追加しない
+- 会話形式や説明文を混ぜない
+- 特定のブランドや販売サイトを推奨しない
+- 個人情報やプライバシーに関する質問を含めない
+- 予算や条件に合わない候補を提案しない
+
+### 12.6 実装上の補足
+
+- バックエンドでは AI 応答を JSON パースし、形式が崩れていれば再試行またはフォールバックする
+- レスポンスの安定性を高めるため、プロンプトは `system` と `user` の役割を分けて構築する
+- AI からの結果は `result` などの別名ではなく、明示的に `output` で受け取る
+
+### 12.7 エラー時の扱い
 
 - JSON パース失敗時は再試行する
 - 再試行でも失敗した場合は安全なフォールバック文言を返す

@@ -109,6 +109,35 @@
 }
 ```
 
+#### AI 生成結果の JSON 仕様
+
+`result` には AI から生成した以下の構造を含める。
+
+```json
+{
+  "summary": "",
+  "gift_candidates": [
+    {
+      "name": "",
+      "reason": "",
+      "budget_range": "",
+      "caution": "",
+      "suitable_for": "",
+      "message": ""
+    }
+  ],
+  "tips": [""],
+  "avoid": [""]
+}
+```
+
+- `summary`: 提案全体の要約
+- `gift_candidates`: 2〜4 件程度の候補を想定
+- `tips`: 選び方や渡し方のアドバイス
+- `avoid`: 避けるべきポイント
+
+AI には内部的に `input` オブジェクトを渡し、必ず JSON のみを返すよう指示する。バックエンドは AI 応答を検証し、構造が崩れている場合は再試行またはフォールバックする。
+
 #### Error Examples
 
 ```json
