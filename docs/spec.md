@@ -238,7 +238,7 @@ MVPでは主に `private` と `public` を使い、`unlisted` は DB 上に用�
 
 システム側で以下を整理して AI に渡す。リクエストは `input` オブジェクトとして構造化し、フロントと同じ名称を使う。
 
-- `recipient_age_group`: 20s / 30s のような世代、または中学2年生 / 大学1年生のような学年を表す文字列
+- `recipient_age_group`: リストから選択した文字列
 - `recipient_gender`: 性別または `unspecified` を表す文字列
 - `relationship`: 自分との関係性を表す文字列
 - `purpose`: 贈る目的を表す文字列
