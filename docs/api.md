@@ -72,7 +72,7 @@
 
 #### Request Schema
 
-- `recipient_age_group`: 20s / 30s のような世代、または中学2年生 / 大学1年生のような学年を表す文字列
+- `recipient_age_group`: リストから選択した文字列
 - `recipient_gender`: 性別または `unspecified` を表す文字列
 - `relationship`: 自分との関係性を表す文字列
 - `purpose`: 贈る目的を表す文字列
