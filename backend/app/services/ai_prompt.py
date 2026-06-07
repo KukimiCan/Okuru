@@ -1,5 +1,11 @@
 import json
-from typing import Any, Dict, List
+import os
+from typing import Any, Dict, List, Optional
+
+import requests
+from dotenv import load_dotenv
+
+load_dotenv()
 
 SYSTEM_PROMPT = """あなたはギフト提案アシスタントです。
 以下の制約を必ず守って回答してください。
@@ -58,3 +64,40 @@ def _build_user_message(input_data: Dict[str, Any]) -> str:
 def get_output_schema_template() -> Dict[str, Any]:
     """Return a copy of the expected AI output schema."""
     return json.loads(_render_json(OUTPUT_SCHEMA_TEMPLATE))
+
+
+def call_gemini(messages: List[Dict[str, str]]) -> Optional[Dict[str, Any]]:
+    """Call the Gemini API using environment-configured API key and model.
+
+    Reads `GEMINI_API_KEY` and `GEMINI_MODEL` from the environment (or from
+    a loaded .env). Returns the JSON response on success, or a dict with an
+    `error` key when the network/HTTP request fails. This function will not
+    raise on connection errors to keep callers resilient.
+    """
+    api_key = os.getenv("GEMINI_API_KEY")
+    model = os.getenv("GEMINI_MODEL")
+
+    if not api_key or not model:
+        raise RuntimeError("GEMINI_API_KEY and GEMINI_MODEL must be set in the environment")
+
+    base = os.getenv("GEMINI_API_BASE", "https://generativeai.googleapis.com/v1")
+    url = f"{base}/models/{model}:generateText"
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+
+    # The exact request body expected by the Gemini API can vary. We include
+    # `messages` under a `prompt` key here; callers can adapt as needed.
+    payload = {"prompt": {"messages": messages}}
+
+    try:
+        resp = requests.post(url, headers=headers, json=payload, timeout=10)
+        resp.raise_for_status()
+        return resp.json()
+    except requests.exceptions.RequestException as exc:
+        # Do not raise on network/connection issues; return an error dict so
+        # callers can continue operating without crashing.
+        print(f"Gemini request failed: {exc}")
+        return {"error": "connection_failed", "details": str(exc)}
