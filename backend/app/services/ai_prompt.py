@@ -2,8 +2,8 @@ import json
 import os
 from typing import Any, Dict, List, Optional
 
-import requests
 from dotenv import load_dotenv
+from google import genai
 
 load_dotenv()
 
@@ -66,13 +66,17 @@ def get_output_schema_template() -> Dict[str, Any]:
     return json.loads(_render_json(OUTPUT_SCHEMA_TEMPLATE))
 
 
+def _render_prompt_text(messages: List[Dict[str, str]]) -> str:
+    return "\n\n".join([f"{message['role'].upper()}:\n{message['content']}" for message in messages])
+
+
 def call_gemini(messages: List[Dict[str, str]]) -> Optional[Dict[str, Any]]:
     """Call the Gemini API using environment-configured API key and model.
 
     Reads `GEMINI_API_KEY` and `GEMINI_MODEL` from the environment (or from
-    a loaded .env). Returns the JSON response on success, or a dict with an
-    `error` key when the network/HTTP request fails. This function will not
-    raise on connection errors to keep callers resilient.
+    a loaded .env). Returns a dict containing the generated text on success,
+    or a dict with an `error` key when the request fails. This function will
+    not raise on network/connection issues to keep callers resilient.
     """
     api_key = os.getenv("GEMINI_API_KEY")
     model = os.getenv("GEMINI_MODEL")
@@ -80,24 +84,12 @@ def call_gemini(messages: List[Dict[str, str]]) -> Optional[Dict[str, Any]]:
     if not api_key or not model:
         raise RuntimeError("GEMINI_API_KEY and GEMINI_MODEL must be set in the environment")
 
-    base = os.getenv("GEMINI_API_BASE", "https://generativeai.googleapis.com/v1")
-    url = f"{base}/models/{model}:generateText"
-
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-    }
-
-    # The exact request body expected by the Gemini API can vary. We include
-    # `messages` under a `prompt` key here; callers can adapt as needed.
-    payload = {"prompt": {"messages": messages}}
+    client = genai.Client(api_key=api_key)
+    payload_text = _render_prompt_text(messages)
 
     try:
-        resp = requests.post(url, headers=headers, json=payload, timeout=10)
-        resp.raise_for_status()
-        return resp.json()
-    except requests.exceptions.RequestException as exc:
-        # Do not raise on network/connection issues; return an error dict so
-        # callers can continue operating without crashing.
+        response = client.models.generate_content(model=model, contents=payload_text)
+        return {"text": getattr(response, "text", None)}
+    except Exception as exc:
         print(f"Gemini request failed: {exc}")
         return {"error": "connection_failed", "details": str(exc)}
