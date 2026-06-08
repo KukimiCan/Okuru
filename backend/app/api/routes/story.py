@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, Query,HTTPException,status
 from typing import Optional
+from app.services.auth import get_current_user
 from app.db.database import get_supabase
-from app.schemas.story import StoryListResponse, StoryListResponseData, StoryListItem,StoryDetailResponse, StoryDetail
-from app.crud.story import get_public_stories,get_story_by_id
+from app.schemas.story import StoryListResponse, StoryListResponseData, StoryListItem,StoryDetailResponse, StoryDetail,StoryCreate, StoryCreateResponse
+from app.crud.story import get_public_stories,get_story_by_id,create_story
 from supabase import Client
 
 router = APIRouter(prefix="/stories", tags=["stories"])
@@ -60,3 +61,20 @@ def read_story(
     return StoryDetailResponse(
         data=StoryDetail(**story)
     )
+
+# DB-08: 体験談投稿API（認証必須）
+@router.post("", response_model=StoryCreateResponse, status_code=status.HTTP_201_CREATED)
+def post_story(
+    story_in: StoryCreate,
+    current_user_id: str = Depends(get_current_user), # ここでJWT認証を実行
+    supabase: Client = Depends(get_supabase)
+):
+    # CRUD処理の呼び出し
+    new_story = create_story(
+        supabase=supabase,
+        user_id=current_user_id,
+        story_data=story_in.model_dump()
+    )
+    
+    # 登録されたレコードをそのままPydanticスキーマに流し込んで返却
+    return new_story
