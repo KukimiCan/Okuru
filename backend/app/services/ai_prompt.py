@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from typing import Any, Dict, List, Optional
 
 from dotenv import load_dotenv
@@ -70,6 +71,132 @@ def _render_prompt_text(messages: List[Dict[str, str]]) -> str:
     return "\n\n".join([f"{message['role'].upper()}:\n{message['content']}" for message in messages])
 
 
+def _extract_json_candidate(text: str) -> str:
+    """Extract a JSON object/array candidate from Gemini output.
+
+    The function prefers fenced code blocks and otherwise scans for the first
+    top-level JSON object/array. It intentionally does not attempt to repair
+    malformed JSON.
+    """
+    if not isinstance(text, str):
+        raise ValueError("Gemini response text is not a string")
+
+    fenced_blocks = re.findall(r"```(?:json)?\s*(.*?)```", text, flags=re.IGNORECASE | re.DOTALL)
+    for block in fenced_blocks:
+        candidate = block.strip()
+        if candidate:
+            try:
+                json.loads(candidate)
+                return candidate
+            except json.JSONDecodeError:
+                continue
+
+    start_index = min(
+        [text.find("{") if text.find("{") != -1 else len(text), text.find("[") if text.find("[") != -1 else len(text)],
+        default=len(text),
+    )
+
+    if start_index == len(text):
+        raise ValueError("No JSON object or array found in Gemini response")
+
+    open_char = text[start_index]
+    close_char = "}" if open_char == "{" else "]"
+    depth = 0
+    in_string = False
+    escaped = False
+
+    for index in range(start_index, len(text)):
+        char = text[index]
+        if in_string:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == '"':
+                in_string = False
+            continue
+
+        if char == '"':
+            in_string = True
+            continue
+
+        if char == open_char:
+            depth += 1
+        elif char == close_char:
+            depth -= 1
+            if depth == 0:
+                candidate = text[start_index:index + 1].strip()
+                try:
+                    json.loads(candidate)
+                    return candidate
+                except json.JSONDecodeError:
+                    raise ValueError("Gemini response contains invalid JSON")
+
+    raise ValueError("Gemini response contains incomplete JSON")
+
+
+def normalize_gemini_output(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Normalize Gemini output to the spec-defined structure.
+
+    The function fills missing keys with safe defaults, but only after the
+    response has already been parsed successfully as valid JSON.
+    """
+    if not isinstance(payload, dict):
+        raise ValueError("Gemini response must be a JSON object")
+
+    output = payload.get("output")
+    if not isinstance(output, dict):
+        raise ValueError("Gemini response must contain an 'output' object")
+
+    summary = output.get("summary", "") if isinstance(output.get("summary", ""), str) else ""
+    raw_candidates = output.get("gift_candidates", [])
+    if not isinstance(raw_candidates, list):
+        raise ValueError("'gift_candidates' must be an array")
+
+    normalized_candidates = []
+    for candidate in raw_candidates:
+        if not isinstance(candidate, dict):
+            raise ValueError("Each gift candidate must be an object")
+
+        normalized_candidates.append(
+            {
+                "name": candidate.get("name", "") if isinstance(candidate.get("name", ""), str) else "",
+                "reason": candidate.get("reason", "") if isinstance(candidate.get("reason", ""), str) else "",
+                "budget_range": candidate.get("budget_range", "") if isinstance(candidate.get("budget_range", ""), str) else "",
+                "caution": candidate.get("caution", "") if isinstance(candidate.get("caution", ""), str) else "",
+                "suitable_for": candidate.get("suitable_for", "") if isinstance(candidate.get("suitable_for", ""), str) else "",
+                "message": candidate.get("message", "") if isinstance(candidate.get("message", ""), str) else "",
+            }
+        )
+
+    tips = output.get("tips", [])
+    avoid = output.get("avoid", [])
+    if not isinstance(tips, list):
+        raise ValueError("'tips' must be an array")
+    if not isinstance(avoid, list):
+        raise ValueError("'avoid' must be an array")
+
+    return {
+        "output": {
+            "summary": summary,
+            "gift_candidates": normalized_candidates,
+            "tips": tips,
+            "avoid": avoid,
+        }
+    }
+
+
+def parse_gemini_response(text: str) -> Dict[str, Any]:
+    """Parse Gemini output strictly as JSON and normalize the shape."""
+    candidate_text = _extract_json_candidate(text)
+    try:
+        parsed = json.loads(candidate_text)
+    except json.JSONDecodeError as exc:
+        raise ValueError("Gemini response is not valid JSON") from exc
+
+    return normalize_gemini_output(parsed)
+
+
 def call_gemini(messages: List[Dict[str, str]]) -> Optional[Dict[str, Any]]:
     """Call the Gemini API using environment-configured API key and model.
 
@@ -89,7 +216,14 @@ def call_gemini(messages: List[Dict[str, str]]) -> Optional[Dict[str, Any]]:
 
     try:
         response = client.models.generate_content(model=model, contents=payload_text)
-        return {"text": getattr(response, "text", None)}
+        raw_text = getattr(response, "text", None)
+        if raw_text is None:
+            return {"error": "invalid_response", "details": "Gemini response did not contain text"}
+
+        try:
+            return {"text": parse_gemini_response(raw_text)}
+        except ValueError as exc:
+            return {"error": "invalid_json_response", "details": str(exc)}
     except Exception as exc:
         print(f"Gemini request failed: {exc}")
         return {"error": "connection_failed", "details": str(exc)}
