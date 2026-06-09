@@ -1,5 +1,11 @@
 import json
-from typing import Any, Dict, List
+import os
+from typing import Any, Dict, List, Optional
+
+from dotenv import load_dotenv
+from google import genai
+
+load_dotenv()
 
 SYSTEM_PROMPT = """あなたはギフト提案アシスタントです。
 以下の制約を必ず守って回答してください。
@@ -58,3 +64,32 @@ def _build_user_message(input_data: Dict[str, Any]) -> str:
 def get_output_schema_template() -> Dict[str, Any]:
     """Return a copy of the expected AI output schema."""
     return json.loads(_render_json(OUTPUT_SCHEMA_TEMPLATE))
+
+
+def _render_prompt_text(messages: List[Dict[str, str]]) -> str:
+    return "\n\n".join([f"{message['role'].upper()}:\n{message['content']}" for message in messages])
+
+
+def call_gemini(messages: List[Dict[str, str]]) -> Optional[Dict[str, Any]]:
+    """Call the Gemini API using environment-configured API key and model.
+
+    Reads `GEMINI_API_KEY` and `GEMINI_MODEL` from the environment (or from
+    a loaded .env). Returns a dict containing the generated text on success,
+    or a dict with an `error` key when the request fails. This function will
+    not raise on network/connection issues to keep callers resilient.
+    """
+    api_key = os.getenv("GEMINI_API_KEY")
+    model = os.getenv("GEMINI_MODEL")
+
+    if not api_key or not model:
+        raise RuntimeError("GEMINI_API_KEY and GEMINI_MODEL must be set in the environment")
+
+    client = genai.Client(api_key=api_key)
+    payload_text = _render_prompt_text(messages)
+
+    try:
+        response = client.models.generate_content(model=model, contents=payload_text)
+        return {"text": getattr(response, "text", None)}
+    except Exception as exc:
+        print(f"Gemini request failed: {exc}")
+        return {"error": "connection_failed", "details": str(exc)}

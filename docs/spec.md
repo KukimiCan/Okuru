@@ -236,12 +236,25 @@ MVPでは主に `private` と `public` を使い、`unlisted` は DB 上に用�
 
 ### 12.3 入力の考え方
 
-システム側で以下を整理して AI に渡す。リクエストは `input` オブジェクトとして構造化する。
+システム側で以下を整理して AI に渡す。リクエストは `input` オブジェクトとして構造化し、フロントと同じ名称を使う。
+
+- `recipient_age_group`: リストから選択した文字列
+- `recipient_gender`: 性別または `unspecified` を表す文字列
+- `relationship`: 自分との関係性を表す文字列
+- `purpose`: 贈る目的を表す文字列
+- `budget_min`: 数値。`budget_max` と合わせて予算範囲を表す。どちらか一方は必須。
+- `budget_max`: 数値。`budget_min` と合わせて予算範囲を表す。どちらか一方は必須。
+- `hobbies`: 文字列配列。空の場合は `[]` とする。
+- `avoid_items`: 文字列配列。空の場合は `[]` とする。
+- `desired_mood`: 希望する雰囲気を表す文字列
+- `note`: 補足メモを表す文字列
+
+`budget_min` または `budget_max` が未指定の場合は `null` を送信し、両方未指定は許容しない。
 
 ```json
 {
   "input": {
-    "recipient_age_group": "20s",
+    "recipient_age_group": "中学2年生",
     "recipient_gender": "unspecified",
     "relationship": "friend",
     "purpose": "birthday",
@@ -250,7 +263,7 @@ MVPでは主に `private` と `public` を使い、`unlisted` は DB 上に用�
     "hobbies": ["coffee", "reading"],
     "avoid_items": ["香りが強いもの", "大きくて置き場所に困るもの"],
     "desired_mood": "practical",
-    "note": "仕事が忙しい人です"
+    "note": "部活が忙しいひとです"
   }
 }
 ```
