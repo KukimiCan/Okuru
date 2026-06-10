@@ -68,3 +68,29 @@ def get_story_by_id(supabase: Client, story_id: str) -> Optional[Dict[str, Any]]
         return None
         
     return story
+
+def create_story(supabase: Client, user_id: str, story_data: dict) -> dict:
+    """
+    新しい体験談をデータベースに挿入する
+    """
+    insert_data = {
+        "user_id": user_id,
+        "title": story_data["title"],
+        "relationship": story_data["relationship"],
+        "purpose": story_data["purpose"],
+        "budget_range": story_data["budget_range"],
+        "gift_item": story_data["gift_item"],
+        "result": story_data["result"],
+        "body": story_data["body"],
+        "visibility": story_data["visibility"],
+        "keywords": story_data["keywords"]
+    }
+    
+    response = supabase.table("gift_stories") \
+        .insert(insert_data) \
+        .execute()
+        
+    if not response.data:
+        raise RuntimeError("データの挿入に失敗しました。")
+        
+    return response.data[0]

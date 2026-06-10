@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import List
+from pydantic import BaseModel,Field
+from typing import List,Optional
 from datetime import datetime
 from uuid import UUID
 
@@ -40,3 +40,19 @@ class StoryDetail(BaseModel):
 class StoryDetailResponse(BaseModel):
     data: StoryDetail
     message: str = "success"
+
+class StoryCreate(BaseModel):
+    title: str
+    relationship: str
+    purpose: str
+    budget_range: str
+    gift_item: str
+    result: str          # 'success' | 'normal' | 'failure'
+    body: str
+    keywords: List[str] = []
+    visibility: Optional[str] = "public"  # 'public' | 'unlisted' | 'private'
+
+# 投稿成功時に返すミニマルなレスポンスデータ
+class StoryCreateResponse(BaseModel):
+    id: UUID
+    created_at: datetime
