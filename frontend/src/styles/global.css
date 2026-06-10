@@ -224,7 +224,6 @@ a {
   margin: 0;
   padding-left: 20px;
 }
-
 .notice {
   background: #fff7ed;
   color: #9a3412;
@@ -345,7 +344,6 @@ a {
   color: #52606d;
   font-weight: 800;
 }
-
 @media (max-width: 720px) {
   .site-header {
     align-items: flex-start;
@@ -363,7 +361,6 @@ a {
   .form-grid {
     grid-template-columns: 1fr;
   }
-
   .card-grid {
     grid-template-columns: 1fr;
   }
