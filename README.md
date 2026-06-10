@@ -115,7 +115,9 @@ SUPABASE_SERVICE_ROLE_KEY=
 SUPABASE_JWT_SECRET=
 GEMINI_API_KEY=
 GEMINI_MODEL=
-CORS_ORIGINS=http://localhost:5173
+CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+FRONTEND_URL=
+VERCEL_URL=
 ```
 
 `DATABASE_URL` は、Supabase の Python クライアント中心で実装する場合は必須ではありません。必要になった場合のみ追加します。
@@ -180,6 +182,8 @@ pip install -r requirements.txt
 - `GEMINI_API_KEY`: Gemini API キー
 - `GEMINI_MODEL`: Gemini のモデル名。実装時点で利用可能な無料枠や制限を確認して決定する
 - `CORS_ORIGINS`: 許可するフロントエンドURLのカンマ区切り
+- `FRONTEND_URL`: 本番フロントエンドURL
+- `VERCEL_URL`: Vercel が自動で設定するURL。スキームなしの場合は `https://` として扱う
 
 ## 開発メンバーの役割分担
 
