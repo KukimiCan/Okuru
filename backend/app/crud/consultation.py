@@ -35,3 +35,18 @@ def get_consultations(
         "limit": limit,
         "total": response.count if response.count is not None else len(response.data)
     }
+
+def get_consultation_detail(supabase: Client, consultation_id: str, user_id: str):
+    # .maybe_single() を外し、普通に条件に合うデータを取得する
+    response = supabase.table("gift_consultations") \
+        .select("id, title, input_conditions, ai_response, is_favorite, visibility, created_at") \
+        .eq("id", consultation_id) \
+        .eq("user_id", user_id) \
+        .execute()
+        
+    # response.data が存在し、中身が空でなければ最初の1件（インデックス0）を返す
+    if response.data and len(response.data) > 0:
+        return response.data[0]
+        
+    # データが1件も見つからなかった（または他人のデータだった）場合は None を返す
+    return None

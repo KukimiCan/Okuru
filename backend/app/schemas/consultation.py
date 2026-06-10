@@ -24,3 +24,21 @@ class ConsultationListResponseData(BaseModel):
 class ConsultationListResponse(BaseModel):
     data: ConsultationListResponseData
     message: str = "success"
+
+# 詳細表示用のデータ構造
+class ConsultationDetailResponseData(BaseModel):
+    id: str
+    title: str
+    input_conditions: str   # 追加：ユーザーの相談テキスト
+    ai_response: str  # 追加：AIの回答テキスト
+    is_favorite: bool
+    visibility: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+# 最終的な共通レスポンス構造
+class ConsultationDetailResponse(BaseModel):
+    data: ConsultationDetailResponseData
+    message: str = "success"
