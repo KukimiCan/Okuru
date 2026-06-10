@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import time
 from typing import Any, Dict, List, Optional
 
 from dotenv import load_dotenv
@@ -65,6 +66,33 @@ def _build_user_message(input_data: Dict[str, Any]) -> str:
 def get_output_schema_template() -> Dict[str, Any]:
     """Return a copy of the expected AI output schema."""
     return json.loads(_render_json(OUTPUT_SCHEMA_TEMPLATE))
+
+
+def _safe_fallback_output(reason: str) -> Dict[str, Any]:
+    """Return a minimal safe output when Gemini responses are unreliable."""
+    return {
+        "output": {
+            "summary": "AI応答の整形に失敗したため、簡易的な安全な案を表示します。",
+            "gift_candidates": [
+                {
+                    "name": "安全な提案案",
+                    "reason": "AIの応答が安定しなかったため、最低限の案として表示します。",
+                    "budget_range": "目安は入力内容をご確認ください",
+                    "caution": "詳細な候補は再試行後に確認してください。",
+                    "suitable_for": "一般的なギフト選び",
+                    "message": "一度お試しください。",
+                }
+            ],
+            "tips": ["応答が不安定な場合は少し時間を置いてから再度お試しください。"],
+            "avoid": ["未確認のブランドや販売サイトの推奨は避けています。"],
+        }
+    }
+
+
+def _contains_forbidden_content(text: str) -> bool:
+    """Detect obviously unsafe or disallowed output before parsing."""
+    forbidden_patterns = [r"https?://", r"販売サイト", r"ブランド名", r"ここは推奨"]
+    return any(re.search(pattern, text, flags=re.IGNORECASE) for pattern in forbidden_patterns)
 
 
 def _render_prompt_text(messages: List[Dict[str, str]]) -> str:
@@ -189,6 +217,9 @@ def normalize_gemini_output(payload: Dict[str, Any]) -> Dict[str, Any]:
 def parse_gemini_response(text: str) -> Dict[str, Any]:
     """Parse Gemini output strictly as JSON and normalize the shape."""
     candidate_text = _extract_json_candidate(text)
+    if _contains_forbidden_content(candidate_text):
+        raise ValueError("Gemini response contains forbidden or unsafe content")
+
     try:
         parsed = json.loads(candidate_text)
     except json.JSONDecodeError as exc:
@@ -197,13 +228,11 @@ def parse_gemini_response(text: str) -> Dict[str, Any]:
     return normalize_gemini_output(parsed)
 
 
-def call_gemini(messages: List[Dict[str, str]]) -> Optional[Dict[str, Any]]:
-    """Call the Gemini API using environment-configured API key and model.
+def call_gemini(messages: List[Dict[str, str]], max_retries: int = 2) -> Optional[Dict[str, Any]]:
+    """Call Gemini with retries and a safe fallback when parsing fails.
 
-    Reads `GEMINI_API_KEY` and `GEMINI_MODEL` from the environment (or from
-    a loaded .env). Returns a dict containing the generated text on success,
-    or a dict with an `error` key when the request fails. This function will
-    not raise on network/connection issues to keep callers resilient.
+    The function retries transient JSON parsing and connection failures, and
+    falls back to a minimal safe output after the configured number of retries.
     """
     api_key = os.getenv("GEMINI_API_KEY")
     model = os.getenv("GEMINI_MODEL")
@@ -214,16 +243,29 @@ def call_gemini(messages: List[Dict[str, str]]) -> Optional[Dict[str, Any]]:
     client = genai.Client(api_key=api_key)
     payload_text = _render_prompt_text(messages)
 
-    try:
-        response = client.models.generate_content(model=model, contents=payload_text)
-        raw_text = getattr(response, "text", None)
-        if raw_text is None:
-            return {"error": "invalid_response", "details": "Gemini response did not contain text"}
-
+    for attempt in range(max_retries + 1):
         try:
-            return {"text": parse_gemini_response(raw_text)}
-        except ValueError as exc:
-            return {"error": "invalid_json_response", "details": str(exc)}
-    except Exception as exc:
-        print(f"Gemini request failed: {exc}")
-        return {"error": "connection_failed", "details": str(exc)}
+            response = client.models.generate_content(model=model, contents=payload_text)
+            raw_text = getattr(response, "text", None)
+            if raw_text is None:
+                if attempt < max_retries:
+                    time.sleep(0.2 * (attempt + 1))
+                    continue
+                return {"text": _safe_fallback_output("Gemini response did not contain text")}
+
+            try:
+                return {"text": parse_gemini_response(raw_text)}
+            except ValueError as exc:
+                if attempt < max_retries:
+                    time.sleep(0.2 * (attempt + 1))
+                    continue
+                print(f"Gemini response invalid after retries: {exc}")
+                return {"text": _safe_fallback_output(str(exc))}
+        except Exception as exc:
+            if attempt < max_retries:
+                time.sleep(0.2 * (attempt + 1))
+                continue
+            print(f"Gemini request failed after retries: {exc}")
+            return {"text": _safe_fallback_output(str(exc))}
+
+    return {"text": _safe_fallback_output("Gemini response could not be prepared safely")}
