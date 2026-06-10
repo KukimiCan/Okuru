@@ -1,3 +1,4 @@
+from app.api.routes.consultations import router as consultations_router
 from fastapi import FastAPI,Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -36,4 +37,5 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 app.include_router(health_router, prefix="/api")
+app.include_router(consultations_router, prefix="/api")
 app.include_router(story_router, prefix="/api")
