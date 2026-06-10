@@ -88,7 +88,8 @@ a {
 
 .home-page,
 .placeholder,
-.form-page {
+.form-page,
+.detail-page {
   display: grid;
   gap: 24px;
 }
@@ -101,7 +102,8 @@ a {
 
 .home-page h1,
 .placeholder h1,
-.form-page h1 {
+.form-page h1,
+.detail-page h1 {
   color: #102a43;
   font-size: clamp(2.25rem, 8vw, 4.75rem);
   line-height: 1;
@@ -114,7 +116,8 @@ a {
 
 .home-page p,
 .placeholder p,
-.form-page p {
+.form-page p,
+.detail-page p {
   color: #52606d;
   font-size: 1.05rem;
   line-height: 1.8;
@@ -211,6 +214,16 @@ a {
   color: #991b1b;
 }
 
+.form-error p {
+  color: inherit;
+  font-weight: 800;
+  margin: 0 0 8px;
+}
+
+.form-error ul {
+  margin: 0;
+  padding-left: 20px;
+}
 .notice {
   background: #fff7ed;
   color: #9a3412;
@@ -247,6 +260,90 @@ a {
   margin: 0;
 }
 
+.card-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.result-card {
+  background: #ffffff;
+  border: 1px solid #d9e2ec;
+  border-radius: 8px;
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+}
+
+.result-card h2 {
+  color: #102a43;
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.info-list {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+}
+
+.info-list div {
+  display: grid;
+  gap: 4px;
+}
+
+.info-list dt {
+  color: #334e68;
+  font-weight: 800;
+}
+
+.info-list dd {
+  color: #52606d;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.detail-list {
+  background: #ffffff;
+  border: 1px solid #d9e2ec;
+  border-radius: 8px;
+  display: grid;
+  gap: 0;
+  margin: 0;
+  max-width: 760px;
+}
+
+.detail-list div {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 160px 1fr;
+  padding: 14px 16px;
+}
+
+.detail-list div + div {
+  border-top: 1px solid #d9e2ec;
+}
+
+.detail-list dt {
+  color: #334e68;
+  font-weight: 800;
+}
+
+.detail-list dd {
+  color: #52606d;
+  margin: 0;
+}
+
+.filter-bar {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(220px, 2fr) repeat(4, minmax(140px, 1fr));
+}
+
+.count-label {
+  color: #52606d;
+  font-weight: 800;
+}
 @media (max-width: 720px) {
   .site-header {
     align-items: flex-start;
@@ -262,6 +359,17 @@ a {
   }
 
   .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-list div {
     grid-template-columns: 1fr;
   }
 }
