@@ -73,6 +73,10 @@ def create_story(supabase: Client, user_id: str, story_data: dict) -> dict:
     """
     新しい体験談をデータベースに挿入する
     """
+    supabase.table("profiles") \
+        .upsert({"id": user_id}, on_conflict="id") \
+        .execute()
+
     insert_data = {
         "user_id": user_id,
         "title": story_data["title"],
