@@ -1,5 +1,38 @@
+import re
+from datetime import datetime, timezone
+from typing import Any, Dict, Optional
+
 from supabase import Client
-from typing import Optional
+
+
+MASKED_TEXT = "[マスキング済み]"
+
+
+def _mask_sensitive_text(value: str) -> str:
+    """MVP向けの簡易マスキング。氏名や電話番号を除去して、調査用に要約を残す。"""
+    text = value
+    text = re.sub(r"\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b", MASKED_TEXT, text)
+    text = re.sub(r"\b0\d{1,4}-\d{2,4}-\d{3,4}\b", MASKED_TEXT, text)
+    text = re.sub(r"\b(?:山田|鈴木|佐藤|高橋|田中)\w*\b", MASKED_TEXT, text)
+    return text
+
+
+def build_log_payload(input_data: Dict[str, Any], ai_summary: str, status: str, error_details: Optional[str]) -> Dict[str, Any]:
+    """相談ログの最小保存形式を返す。"""
+    note = _mask_sensitive_text(str(input_data.get("note", ""))) if input_data.get("note") else ""
+
+    return {
+        "consulted_at": datetime.now(timezone.utc).isoformat(),
+        "status": status,
+        "recipient_age_group": input_data.get("recipient_age_group"),
+        "relationship": input_data.get("relationship"),
+        "purpose": input_data.get("purpose"),
+        "budget_min": input_data.get("budget_min"),
+        "budget_max": input_data.get("budget_max"),
+        "note": note,
+        "AI回答要約": ai_summary,
+        "error_details": error_details,
+    }
 
 def get_consultations(
     supabase: Client,
@@ -35,6 +68,58 @@ def get_consultations(
         "limit": limit,
         "total": response.count if response.count is not None else len(response.data)
     }
+
+def create_consultation(supabase: Client, user_id: str, consultation_data: Dict[str, Any]) -> Dict[str, Any]:
+    """相談内容をDBへ保存し、調査用の簡易ログを残す。"""
+    ai_summary = (
+        f"{consultation_data.get('relationship', '未指定')}向けに、"
+        f"{consultation_data.get('purpose', '未指定')}を目的にした提案を作成します。"
+    )
+    status = "success"
+    error_details = None
+
+    try:
+        # MVPでは Gemini 呼び出しが未設定でも保存できるよう、簡易サマリを優先して使う。
+        if consultation_data.get("note"):
+            ai_summary = ai_summary + " 補足メモは保存済みです。"
+    except Exception as exc:  # pragma: no cover - defensive fallback
+        status = "error"
+        error_details = str(exc)
+
+    log_payload = build_log_payload(
+        input_data=consultation_data,
+        ai_summary=ai_summary,
+        status=status,
+        error_details=error_details,
+    )
+
+    insert_data = {
+        "user_id": user_id,
+        "title": f"{consultation_data.get('relationship', '相談')}/{consultation_data.get('purpose', '提案')}",
+        "input_conditions": consultation_data,
+        "ai_response": {
+            "status": status,
+            "summary": ai_summary,
+            "error": error_details,
+            "log": log_payload,
+        },
+        "visibility": "private",
+        "is_favorite": False,
+    }
+
+    response = supabase.table("gift_consultations").insert(insert_data).execute()
+    if not response.data:
+        raise RuntimeError("相談履歴の保存に失敗しました。")
+
+    saved = response.data[0]
+    return {
+        "id": saved["id"],
+        "title": saved["title"],
+        "input_conditions": saved["input_conditions"],
+        "ai_response": saved["ai_response"],
+        "created_at": saved.get("created_at"),
+    }
+
 
 def get_consultation_detail(supabase: Client, consultation_id: str, user_id: str):
     # .maybe_single() を外し、普通に条件に合うデータを取得する

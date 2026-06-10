@@ -1,11 +1,40 @@
-from fastapi import APIRouter, Depends, Query,status,HTTPException
+from fastapi import APIRouter, Depends, Query, status, HTTPException
 from typing import Optional
-from app.db.database import get_supabase  # Supabaseクライアント取得用の関数（環境に合わせて調整してください）
+
+from app.db.database import get_supabase
 from app.services.auth import get_current_user
-from app.schemas.consultation import ConsultationListResponse, ConsultationDetailResponse
-from app.crud.consultation import get_consultations, get_consultation_detail
+from app.schemas.consultation import (
+    ConsultationCreateRequest,
+    ConsultationCreateResponse,
+    ConsultationDetailResponse,
+    ConsultationListResponse,
+)
+from app.crud.consultation import create_consultation, get_consultation_detail, get_consultations
 
 router = APIRouter(prefix="/consultations", tags=["consultations"])
+
+@router.post("", response_model=ConsultationCreateResponse, status_code=status.HTTP_201_CREATED)
+def create_consultation_record(
+    consultation_in: ConsultationCreateRequest,
+    current_user_id: str = Depends(get_current_user),
+    supabase = Depends(get_supabase),
+):
+    try:
+        saved = create_consultation(
+            supabase=supabase,
+            user_id=current_user_id,
+            consultation_data=consultation_in.model_dump(),
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"相談履歴の保存に失敗しました: {exc}",
+        ) from exc
+
+    return ConsultationCreateResponse(
+        data=saved,
+        message="success",
+    )
 
 @router.get("", response_model=ConsultationListResponse)
 def list_consultations(
