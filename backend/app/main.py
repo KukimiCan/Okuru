@@ -1,18 +1,17 @@
-from app.api.routes.consultations import router as consultations_router
-from fastapi import FastAPI,Request, status
+from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from app.api.routes.consultations import router as consultations_router
 from app.core.config import settings
 from app.api.routes.health import router as health_router
 from app.api.routes.story import router as story_router
 
 app = FastAPI()
 
-origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",")]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
