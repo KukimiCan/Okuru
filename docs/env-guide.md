@@ -46,7 +46,9 @@ SUPABASE_SERVICE_ROLE_KEY=
 SUPABASE_JWT_SECRET=
 GEMINI_API_KEY=
 GEMINI_MODEL=
-CORS_ORIGINS=http://localhost:5173
+CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+FRONTEND_URL=
+VERCEL_URL=
 ```
 
 ### 各項目の意味
@@ -57,7 +59,9 @@ CORS_ORIGINS=http://localhost:5173
 - `SUPABASE_JWT_SECRET`: Supabase Auth の JWT を検証するための情報
 - `GEMINI_API_KEY`: Gemini API を使うためのキー
 - `GEMINI_MODEL`: 使う Gemini モデル名
-- `CORS_ORIGINS`: フロントエンドからのアクセスを許可する URL
+- `CORS_ORIGINS`: フロントエンドからのアクセスを許可する URL。複数ある場合はカンマ区切り
+- `FRONTEND_URL`: 本番フロントエンド URL。`CORS_ORIGINS` に含めてもよい
+- `VERCEL_URL`: Vercel が自動で設定する URL。スキームなしの場合は `https://` として扱う
 
 ## 公開してよいキーと公開してはいけないキー
 
