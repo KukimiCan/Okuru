@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query,HTTPException,status
 from typing import Optional
 from app.services.auth import get_current_user
 from app.db.database import get_supabase
-from app.schemas.story import StoryListResponse, StoryListResponseData, StoryListItem,StoryDetailResponse, StoryDetail,StoryCreate, StoryCreateResponse
+from app.schemas.story import StoryListResponse, StoryListResponseData, StoryListItem,StoryDetailResponse, StoryDetail,StoryCreate, StoryCreateResponse, StoryCreateResponseData
 from app.crud.story import get_public_stories,get_story_by_id,create_story
 from supabase import Client
 
@@ -77,4 +77,4 @@ def post_story(
     )
     
     # 登録されたレコードをそのままPydanticスキーマに流し込んで返却
-    return new_story
+    return StoryCreateResponse(data=StoryCreateResponseData(**new_story))
