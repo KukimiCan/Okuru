@@ -6,6 +6,7 @@ from app.api.routes.consultations import router as consultations_router
 from app.core.config import settings
 from app.api.routes.health import router as health_router
 from app.api.routes.story import router as story_router
+from app.api.routes.consultation import router as consultation_router
 
 app = FastAPI()
 
