@@ -47,3 +47,24 @@ def get_public_stories(
     total = response.count if response.count is not None else 0
     
     return items, total
+
+# crud/story.py に以下を追記
+
+def get_story_by_id(supabase: Client, story_id: str) -> Optional[Dict[str, Any]]:
+    # 指定されたIDのレコードを1件取得
+    response = supabase.table("gift_stories") \
+        .select("*") \
+        .eq("id", story_id) \
+        .execute()
+        
+    # レコードが存在しない場合は None を返す
+    if not response.data:
+        return None
+        
+    story = response.data[0]
+    
+    # 閲覧制限チェック: private の場合は取得不可とする
+    if story.get("visibility") == "private":
+        return None
+        
+    return story
