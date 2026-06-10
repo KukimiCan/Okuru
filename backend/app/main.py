@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from app.api.routes.consultations import router as consultations_router
 from app.api.routes.health import router as health_router
+from app.api.routes.story import router as story_router
 
 app = FastAPI()
 
 app.include_router(health_router, prefix="/api")
 app.include_router(consultations_router, prefix="/api")
+app.include_router(story_router, prefix="/api")

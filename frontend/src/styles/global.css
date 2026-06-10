@@ -33,6 +33,25 @@ a {
   background: #ffffff;
 }
 
+.auth-status {
+  align-items: center;
+  color: #52606d;
+  display: flex;
+  font-size: 0.86rem;
+  gap: 10px;
+}
+
+.text-button {
+  border: 0;
+  background: transparent;
+  color: #0f766e;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  padding: 0;
+  text-decoration: none;
+}
+
 .brand {
   color: #102a43;
   font-size: 1.25rem;
@@ -68,13 +87,21 @@ a {
 }
 
 .home-page,
-.placeholder {
+.placeholder,
+.form-page {
   display: grid;
   gap: 24px;
 }
 
+.home-hero {
+  display: grid;
+  gap: 24px;
+  min-height: min(58vh, 560px);
+}
+
 .home-page h1,
-.placeholder h1 {
+.placeholder h1,
+.form-page h1 {
   color: #102a43;
   font-size: clamp(2.25rem, 8vw, 4.75rem);
   line-height: 1;
@@ -86,7 +113,8 @@ a {
 }
 
 .home-page p,
-.placeholder p {
+.placeholder p,
+.form-page p {
   color: #52606d;
   font-size: 1.05rem;
   line-height: 1.8;
@@ -131,6 +159,84 @@ a {
   color: #243b53;
 }
 
+.form-stack {
+  display: grid;
+  gap: 18px;
+  max-width: 520px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+  color: #243b53;
+  font-weight: 700;
+}
+
+.field input,
+.field select,
+.field textarea {
+  border: 1px solid #bcccdc;
+  border-radius: 8px;
+  color: #102a43;
+  font: inherit;
+  min-height: 44px;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+.field textarea {
+  min-height: 140px;
+  resize: vertical;
+}
+
+.form-error,
+.notice {
+  border-radius: 8px;
+  line-height: 1.6;
+  padding: 12px 14px;
+}
+
+.form-error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.notice {
+  background: #fff7ed;
+  color: #9a3412;
+  max-width: 680px;
+}
+
+.button-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.section-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.info-panel {
+  border-left: 4px solid #0f766e;
+  display: grid;
+  gap: 10px;
+  padding: 4px 0 4px 16px;
+}
+
+.info-panel h2 {
+  color: #102a43;
+  font-size: 1.08rem;
+  margin: 0;
+}
+
+.info-panel p {
+  color: #52606d;
+  line-height: 1.7;
+  margin: 0;
+}
+
 @media (max-width: 720px) {
   .site-header {
     align-items: flex-start;
@@ -139,5 +245,9 @@ a {
 
   .site-nav {
     justify-content: flex-start;
+  }
+
+  .section-grid {
+    grid-template-columns: 1fr;
   }
 }
