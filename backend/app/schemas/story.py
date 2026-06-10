@@ -53,6 +53,10 @@ class StoryCreate(BaseModel):
     visibility: Optional[str] = "public"  # 'public' | 'unlisted' | 'private'
 
 # 投稿成功時に返すミニマルなレスポンスデータ
-class StoryCreateResponse(BaseModel):
+class StoryCreateResponseData(BaseModel):
     id: UUID
     created_at: datetime
+
+class StoryCreateResponse(BaseModel):
+    data: StoryCreateResponseData
+    message: str = "success"
