@@ -17,18 +17,27 @@ def _mask_sensitive_text(value: str) -> str:
     return text
 
 
+def sanitize_for_storage(input_data: Dict[str, Any]) -> Dict[str, Any]:
+    """DB保存用に個人情報をマスクした入力データを返す。"""
+    sanitized = dict(input_data)
+    if isinstance(sanitized.get("note"), str):
+        sanitized["note"] = _mask_sensitive_text(sanitized["note"])
+    return sanitized
+
+
 def build_log_payload(input_data: Dict[str, Any], ai_summary: str, status: str, error_details: Optional[str]) -> Dict[str, Any]:
     """相談ログの最小保存形式を返す。"""
-    note = _mask_sensitive_text(str(input_data.get("note", ""))) if input_data.get("note") else ""
+    sanitized_input = sanitize_for_storage(input_data)
+    note = sanitized_input.get("note", "")
 
     return {
         "consulted_at": datetime.now(timezone.utc).isoformat(),
         "status": status,
-        "recipient_age_group": input_data.get("recipient_age_group"),
-        "relationship": input_data.get("relationship"),
-        "purpose": input_data.get("purpose"),
-        "budget_min": input_data.get("budget_min"),
-        "budget_max": input_data.get("budget_max"),
+        "recipient_age_group": sanitized_input.get("recipient_age_group"),
+        "relationship": sanitized_input.get("relationship"),
+        "purpose": sanitized_input.get("purpose"),
+        "budget_min": sanitized_input.get("budget_min"),
+        "budget_max": sanitized_input.get("budget_max"),
         "note": note,
         "AI回答要約": ai_summary,
         "error_details": error_details,
@@ -86,8 +95,10 @@ def create_consultation(supabase: Client, user_id: str, consultation_data: Dict[
         status = "error"
         error_details = str(exc)
 
+    sanitized_input = sanitize_for_storage(consultation_data)
+
     log_payload = build_log_payload(
-        input_data=consultation_data,
+        input_data=sanitized_input,
         ai_summary=ai_summary,
         status=status,
         error_details=error_details,
@@ -95,8 +106,8 @@ def create_consultation(supabase: Client, user_id: str, consultation_data: Dict[
 
     insert_data = {
         "user_id": user_id,
-        "title": f"{consultation_data.get('relationship', '相談')}/{consultation_data.get('purpose', '提案')}",
-        "input_conditions": consultation_data,
+        "title": f"{sanitized_input.get('relationship', '相談')}/{sanitized_input.get('purpose', '提案')}",
+        "input_conditions": sanitized_input,
         "ai_response": {
             "status": status,
             "summary": ai_summary,

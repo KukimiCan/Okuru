@@ -1,6 +1,6 @@
 import unittest
 
-from app.crud.consultation import build_log_payload
+from app.crud.consultation import build_log_payload, sanitize_for_storage
 
 
 class ConsultationLoggingTest(unittest.TestCase):
@@ -40,3 +40,16 @@ class ConsultationLoggingTest(unittest.TestCase):
 
         self.assertEqual(payload["status"], "error")
         self.assertEqual(payload["error_details"], "Gemini API unavailable")
+
+    def test_sanitize_for_storage_masks_note_for_db(self):
+        input_data = {
+            "relationship": "友人",
+            "purpose": "誕生日",
+            "note": "山田太郎さん 090-1234-5678 に贈りたい",
+        }
+
+        sanitized = sanitize_for_storage(input_data)
+
+        self.assertNotIn("山田太郎", sanitized["note"])
+        self.assertNotIn("090-1234-5678", sanitized["note"])
+        self.assertIn("[マスキング済み]", sanitized["note"])
