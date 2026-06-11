@@ -1,6 +1,32 @@
-from pydantic import BaseModel
-from typing import List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
+
+class ConsultationCreateRequest(BaseModel):
+    recipient_age_group: str
+    recipient_gender: str
+    relationship: str
+    purpose: str
+    budget_min: Optional[int] = None
+    budget_max: Optional[int] = None
+    hobbies: List[str] = Field(default_factory=list)
+    avoid_items: List[str] = Field(default_factory=list)
+    desired_mood: str
+    note: str = ""
+
+
+class ConsultationCreateResponseData(BaseModel):
+    consultation_id: str
+    input: Dict[str, Any]
+    result: Dict[str, Any]
+    created_at: Optional[datetime] = None
+
+
+class ConsultationCreateResponse(BaseModel):
+    data: ConsultationCreateResponseData
+    message: str = "success"
+
 
 # 一覧の中の1件分のデータ構造
 class ConsultationListItem(BaseModel):
@@ -29,8 +55,8 @@ class ConsultationListResponse(BaseModel):
 class ConsultationDetailResponseData(BaseModel):
     id: str
     title: str
-    input_conditions: str   # 追加：ユーザーの相談テキスト
-    ai_response: str  # 追加：AIの回答テキスト
+    input_conditions: Dict[str, Any]
+    ai_response: Dict[str, Any]
     is_favorite: bool
     visibility: str
     created_at: datetime
