@@ -17,10 +17,9 @@ class ConsultationCreateRequest(BaseModel):
 
 
 class ConsultationCreateResponseData(BaseModel):
-    id: str
-    title: str
-    input_conditions: Dict[str, Any]
-    ai_response: Dict[str, Any]
+    consultation_id: str
+    input: Dict[str, Any]
+    result: Dict[str, Any]
     created_at: Optional[datetime] = None
 
 

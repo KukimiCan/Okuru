@@ -126,11 +126,17 @@ def create_consultation(supabase: Client, user_id: str, consultation_data: Dict[
         raise RuntimeError("相談履歴の保存に失敗しました。")
 
     saved = response.data[0]
+    ai_response = saved.get("ai_response", {}) or {}
+
     return {
-        "id": saved["id"],
-        "title": saved["title"],
-        "input_conditions": saved["input_conditions"],
-        "ai_response": saved["ai_response"],
+        "consultation_id": saved["id"],
+        "input": saved.get("input_conditions", sanitized_input),
+        "result": {
+            "summary": ai_response.get("summary", ""),
+            "gift_candidates": ai_response.get("gift_candidates", []),
+            "tips": ai_response.get("tips", []),
+            "avoid": ai_response.get("avoid", []),
+        },
         "created_at": saved.get("created_at"),
     }
 
