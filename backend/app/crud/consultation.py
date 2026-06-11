@@ -97,6 +97,9 @@ def create_consultation(supabase: Client, user_id: str, consultation_data: Dict[
 
     sanitized_input = sanitize_for_storage(consultation_data)
 
+    # 相談履歴保存前に profiles レコードを確保し、FK 制約を満たす。
+    supabase.table("profiles").upsert({"id": user_id}, on_conflict="id").execute()
+
     log_payload = build_log_payload(
         input_data=sanitized_input,
         ai_summary=ai_summary,
