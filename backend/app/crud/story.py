@@ -157,5 +157,4 @@ def update_story(supabase: Client, story_id: str, user_id: str, story_data: Stor
             "story_id": row.get("id"),          # DBの id を story_id に詰め替え
             "updated_at": row.get("updated_at") # DBの更新日時を取得
         }
-    
     return None

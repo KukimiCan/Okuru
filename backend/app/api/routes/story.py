@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, Query,HTTPException,status
 from typing import Optional
+from supabase import Client
+
 from app.services.auth import get_current_user
 from app.db.database import get_supabase
 from app.schemas.story import StoryListResponse, StoryListResponseData, StoryListItem,StoryDetailResponse, StoryDetail,StoryCreate, StoryCreateResponse, StoryCreateResponseData, StoryUpdate, StoryUpdateResponse
 from app.crud.story import get_public_stories,get_story_by_id,create_story,update_story
-from supabase import Client
 
 router = APIRouter(prefix="/stories", tags=["stories"])
 
@@ -100,5 +101,4 @@ def patch_story(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="指定された体験談が見つからないか、編集権限がありません。"
         )
-        
     return StoryUpdateResponse(data=updated_story_data)
