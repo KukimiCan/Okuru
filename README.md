@@ -196,6 +196,26 @@ Frontend deployment notes:
 - `FRONTEND_URL`: 本番フロントエンドURL
 - `VERCEL_URL`: Vercel が自動で設定するURL。スキームなしの場合は `https://` として扱う
 
+## Frontend Deploy: Vercel
+
+Vercel project settings:
+
+- Root Directory: `frontend`
+- Framework Preset: Vite
+- Install Command: `npm install`
+- Build Command: `npm run build`
+- Output Directory: `dist`
+
+Frontend environment variables:
+
+```env
+VITE_API_BASE_URL=https://<backend-app>.onrender.com
+VITE_SUPABASE_URL=https://<project-ref>.supabase.co
+VITE_SUPABASE_ANON_KEY=<supabase-anon-key>
+```
+
+`frontend/vercel.json` rewrites every route to `index.html`, so React Router pages such as `/consultations/new` and `/stories/:storyId` keep working after refresh or direct access.
+
 ## 開発メンバーの役割分担
 
 - Frontend: 画面作成、フォーム、API接続、結果表示、一覧・詳細画面、レスポンシブ対応
