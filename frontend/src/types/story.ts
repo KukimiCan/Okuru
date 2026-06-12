@@ -19,6 +19,10 @@ export type StoryUpdateResponse = {
   updated_at: string;
 };
 
+export type StoryDeleteResponse = {
+  story_id: string;
+};
+
 export type StoryListItem = {
   id: string;
   title: string;
