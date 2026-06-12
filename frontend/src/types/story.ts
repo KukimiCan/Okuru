@@ -31,6 +31,11 @@ export type StoryListItem = {
   created_at: string;
 };
 
+export type MyStoryListItem = StoryListItem & {
+  visibility: Visibility;
+  updated_at: string;
+};
+
 export type Story = StoryInput & {
   id: string;
   user_id?: string;

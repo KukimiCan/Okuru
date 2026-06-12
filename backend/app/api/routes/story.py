@@ -42,6 +42,7 @@ def read_stories(
             total=total
         )
     )
+
 # パスパラメータ {story_id} を指定した詳細取得API
 @router.get("/{story_id}", response_model=StoryDetailResponse)
 def read_story(

@@ -10,6 +10,10 @@ class StoryListItem(BaseModel):
     budget_range: str
     created_at: datetime
 
+class MyStoryListItem(StoryListItem):
+    visibility: str
+    updated_at: datetime
+
 class StoryListResponseData(BaseModel):
     items: List[StoryListItem]
     page: int
@@ -18,6 +22,16 @@ class StoryListResponseData(BaseModel):
 
 class StoryListResponse(BaseModel):
     data: StoryListResponseData
+    message: str = "success"
+
+class MyStoryListResponseData(BaseModel):
+    items: List[MyStoryListItem]
+    page: int
+    limit: int
+    total: int
+
+class MyStoryListResponse(BaseModel):
+    data: MyStoryListResponseData
     message: str = "success"
 
 # schemas/story.py に以下を追記

@@ -7,6 +7,7 @@ import type {
   StoryListItem,
   StoryListQuery,
   StoryUpdateResponse,
+  MyStoryListItem,
 } from "../types/story";
 
 function toQueryString(query: StoryListQuery = {}) {
@@ -28,6 +29,16 @@ export function getStories(query?: StoryListQuery) {
 
 export function getStory(storyId: string) {
   return apiRequest<Story>(`/api/stories/${storyId}`);
+}
+
+export function getMyStory(storyId: string) {
+  return apiRequest<Story>(`/api/me/stories/${storyId}`);
+}
+
+export function getMyStories(query?: Pick<StoryListQuery, "page" | "limit">) {
+  return apiRequest<PaginatedResponse<MyStoryListItem>>(
+    `/api/me/stories${toQueryString(query)}`,
+  );
 }
 
 export function createStory(input: StoryInput) {
