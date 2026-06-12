@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, Query,HTTPException,status
 from typing import Optional
 from app.services.auth import get_current_user
 from app.db.database import get_supabase
-from app.schemas.story import StoryListResponse, StoryListResponseData, StoryListItem,StoryDetailResponse, StoryDetail,StoryCreate, StoryCreateResponse, StoryCreateResponseData
-from app.crud.story import get_public_stories,get_story_by_id,create_story
+from app.schemas.story import StoryListResponse, StoryListResponseData, StoryListItem,StoryDetailResponse, StoryDetail,StoryCreate, StoryCreateResponse, StoryCreateResponseData, StoryUpdateResponse, StoryUpdateResponseData, StoryUpdate, StoryUpdateResponse, StoryDeleteResponse
+from app.crud.story import get_public_stories,get_story_by_id,create_story,update_story,delete_story
 from supabase import Client
 
 router = APIRouter(prefix="/stories", tags=["stories"])
@@ -42,6 +42,7 @@ def read_stories(
             total=total
         )
     )
+
 # パスパラメータ {story_id} を指定した詳細取得API
 @router.get("/{story_id}", response_model=StoryDetailResponse)
 def read_story(
@@ -78,3 +79,48 @@ def post_story(
     
     # 登録されたレコードをそのままPydanticスキーマに流し込んで返却
     return StoryCreateResponse(data=StoryCreateResponseData(**new_story))
+
+@router.patch("/{story_id}", response_model=StoryUpdateResponse)
+def patch_story(
+    story_id: str,
+    story_data: StoryUpdate,
+    current_user_id: str = Depends(get_current_user),
+    supabase = Depends(get_supabase)
+):
+    # CRUDロジックは前回のままで100%そのまま動きます
+    updated_story_data = update_story(
+        supabase=supabase,
+        story_id=story_id,
+        user_id=current_user_id,
+        story_data=story_data
+    )
+    
+    if not updated_story_data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="指定された体験談が見つからないか、編集権限がありません。"
+        )
+
+    return StoryUpdateResponse(data=updated_story_data)
+
+@router.delete("/{story_id}", response_model=StoryDeleteResponse)
+def remove_story(
+    story_id: str,
+    current_user_id: str = Depends(get_current_user), # JWTからuser_idを安全に取得
+    supabase = Depends(get_supabase)
+):
+    # CRUDロジックで安全に削除を実行
+    deleted_story_data = delete_story(
+        supabase=supabase,
+        story_id=story_id,
+        user_id=current_user_id
+    )
+
+    # 存在しない、または他人の体験談だった場合（削除されなかった場合）
+    if not deleted_story_data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="指定された体験談が見つからないか、削除権限がありません。"
+        )
+
+    return StoryDeleteResponse(data=deleted_story_data)

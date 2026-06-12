@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
+import { useAuth } from "../features/auth/AuthContext";
 import { mockStories } from "../lib/mockData";
-import { getStory } from "../services/storyService";
+import { deleteStory, getStory } from "../services/storyService";
 import type { Story, StoryResult } from "../types/story";
 
 const resultLabels: Record<StoryResult, string> = {
@@ -13,8 +14,12 @@ const resultLabels: Record<StoryResult, string> = {
 
 export function StoryDetailPage() {
   const { storyId } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [story, setStory] = useState<Story | null>(null);
   const [notice, setNotice] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (!storyId) {
@@ -33,6 +38,35 @@ export function StoryDetailPage() {
   }, [storyId]);
 
   const displayStory = story ?? mockStories[0];
+  const canEdit = Boolean(user && displayStory.user_id && displayStory.user_id === user.id);
+
+  async function handleDelete() {
+    if (!storyId || isDeleting) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "この体験談を削除します。削除すると元に戻せません。よろしいですか？",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeleteError("");
+    setIsDeleting(true);
+
+    try {
+      await deleteStory(storyId);
+      navigate("/stories", { replace: true });
+    } catch (error) {
+      setDeleteError(
+        error instanceof Error ? error.message : "体験談の削除に失敗しました。",
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  }
 
   return (
     <section className="detail-page">
@@ -46,6 +80,12 @@ export function StoryDetailPage() {
         <div className="notice" role="status">
           {notice}
         </div>
+      ) : null}
+
+      {deleteError ? (
+        <p className="form-error" role="alert">
+          {deleteError}
+        </p>
       ) : null}
 
       <div className="section-grid">
@@ -82,9 +122,26 @@ export function StoryDetailPage() {
         </div>
       </dl>
 
-      <Link className="button-secondary" to="/stories">
-        一覧へ戻る
-      </Link>
+      <div className="action-row">
+        {canEdit && storyId ? (
+          <Link className="button-primary" to={`/stories/${storyId}/edit`}>
+            編集する
+          </Link>
+        ) : null}
+        {canEdit ? (
+          <button
+            className="button-danger"
+            disabled={isDeleting}
+            onClick={() => void handleDelete()}
+            type="button"
+          >
+            {isDeleting ? "削除中..." : "削除する"}
+          </button>
+        ) : null}
+        <Link className="button-secondary" to="/stories">
+          一覧へ戻る
+        </Link>
+      </div>
     </section>
   );
 }

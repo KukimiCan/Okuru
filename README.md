@@ -25,6 +25,7 @@ Okuru は、AIの提案と人間のリアルな経験談を組み合わせて、
 - [docs/tasks.md](docs/tasks.md): タスク一覧
 - [docs/project-structure.md](docs/project-structure.md): フォルダ・ファイル構成の説明
 - [docs/development-guide.md](docs/development-guide.md): 開発の進め方
+- [docs/backend-deploy-guide.md](docs/backend-deploy-guide.md): Backend の Render デプロイ手順
 - [docs/git-workflow.md](docs/git-workflow.md): Git / GitHub の運用ルール
 - [docs/troubleshooting.md](docs/troubleshooting.md): よくあるエラーと対処法
 
@@ -35,6 +36,7 @@ Okuru は、AIの提案と人間のリアルな経験談を組み合わせて、
 3. 実装後に PR を作成して main へ戻す
 
 Issue 起点でブランチと PR を作ると、誰が何を進めているか分かりやすくなります。
+PR 作成時には GitHub Actions で frontend build と backend test の簡易チェックが実行されます。
 
 ## 技術スタック
 
@@ -116,7 +118,7 @@ VITE_SUPABASE_ANON_KEY=
 APP_ENV=development
 SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
-SUPABASE_JWT_SECRET=
+SUPABASE_JWKS_URL=
 GEMINI_API_KEY=
 GEMINI_MODEL=
 CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
@@ -189,7 +191,7 @@ Frontend deployment notes:
 - `APP_ENV`: `development` / `production`
 - `SUPABASE_URL`: Supabase プロジェクトURL
 - `SUPABASE_SERVICE_ROLE_KEY`: サーバー側で利用する管理キー
-- `SUPABASE_JWT_SECRET`: Supabase JWT 検証用シークレット
+- `SUPABASE_JWKS_URL`: Supabase JWT 検証用の JWKS URL
 - `GEMINI_API_KEY`: Gemini API キー
 - `GEMINI_MODEL`: Gemini のモデル名。実装時点で利用可能な無料枠や制限を確認して決定する
 - `CORS_ORIGINS`: 許可するフロントエンドURLのカンマ区切り
@@ -215,6 +217,32 @@ VITE_SUPABASE_ANON_KEY=<supabase-anon-key>
 ```
 
 `frontend/vercel.json` rewrites every route to `index.html`, so React Router pages such as `/consultations/new` and `/stories/:storyId` keep working after refresh or direct access.
+
+## Backend Deploy: Render
+
+Render project settings:
+
+- Blueprint file: `render.yaml`
+- Root Directory: `backend`
+- Build Command: `pip install -r requirements.txt`
+- Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- Health Check Path: `/api/health`
+
+Backend environment variables:
+
+```env
+APP_ENV=production
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<supabase-service-role-key>
+SUPABASE_JWKS_URL=https://<project-ref>.supabase.co/auth/v1/.well-known/jwks.json
+GEMINI_API_KEY=<gemini-api-key>
+GEMINI_MODEL=<gemini-model-name>
+CORS_ORIGINS=https://<frontend-app>.vercel.app
+FRONTEND_URL=https://<frontend-app>.vercel.app
+```
+
+Render assigns `$PORT` automatically. Do not hard-code port `8000` in the production start command.
+See [docs/backend-deploy-guide.md](docs/backend-deploy-guide.md) for the detailed checklist.
 
 ## 開発メンバーの役割分担
 

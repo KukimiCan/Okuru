@@ -1,6 +1,14 @@
 import { apiRequest } from "./apiClient";
 import type { PaginatedResponse } from "../types/api";
-import type { Story, StoryInput, StoryListItem, StoryListQuery } from "../types/story";
+import type {
+  Story,
+  StoryDeleteResponse,
+  StoryInput,
+  StoryListItem,
+  StoryListQuery,
+  StoryUpdateResponse,
+  MyStoryListItem,
+} from "../types/story";
 
 function toQueryString(query: StoryListQuery = {}) {
   const params = new URLSearchParams();
@@ -23,9 +31,32 @@ export function getStory(storyId: string) {
   return apiRequest<Story>(`/api/stories/${storyId}`);
 }
 
+export function getMyStory(storyId: string) {
+  return apiRequest<Story>(`/api/me/stories/${storyId}`);
+}
+
+export function getMyStories(query?: Pick<StoryListQuery, "page" | "limit">) {
+  return apiRequest<PaginatedResponse<MyStoryListItem>>(
+    `/api/me/stories${toQueryString(query)}`,
+  );
+}
+
 export function createStory(input: StoryInput) {
   return apiRequest<{ id: string; created_at: string }>("/api/stories", {
     method: "POST",
     body: input,
+  });
+}
+
+export function updateStory(storyId: string, input: StoryInput) {
+  return apiRequest<StoryUpdateResponse>(`/api/stories/${storyId}`, {
+    method: "PATCH",
+    body: input,
+  });
+}
+
+export function deleteStory(storyId: string) {
+  return apiRequest<StoryDeleteResponse>(`/api/stories/${storyId}`, {
+    method: "DELETE",
   });
 }

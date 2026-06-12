@@ -1,5 +1,6 @@
 from typing import Optional, List, Tuple, Dict, Any
 from supabase import Client
+from app.schemas.story import StoryUpdate
 
 def get_public_stories(
     supabase: Client,
@@ -47,6 +48,44 @@ def get_public_stories(
     total = response.count if response.count is not None else 0
     
     return items, total
+
+def get_my_stories(
+    supabase: Client,
+    user_id: str,
+    page: int = 1,
+    limit: int = 10,
+) -> Tuple[List[Dict[str, Any]], int]:
+    query = supabase.table("gift_stories") \
+        .select("id, title, result, budget_range, visibility, created_at, updated_at", count="exact") \
+        .eq("user_id", user_id)
+
+    start_idx = (page - 1) * limit
+    end_idx = start_idx + limit - 1
+
+    response = query.order("created_at", desc=True) \
+        .range(start_idx, end_idx) \
+        .execute()
+
+    items = response.data
+    total = response.count if response.count is not None else 0
+
+    return items, total
+
+def get_my_story_by_id(
+    supabase: Client,
+    story_id: str,
+    user_id: str,
+) -> Optional[Dict[str, Any]]:
+    response = supabase.table("gift_stories") \
+        .select("*") \
+        .eq("id", story_id) \
+        .eq("user_id", user_id) \
+        .execute()
+
+    if not response.data:
+        return None
+
+    return response.data[0]
 
 # crud/story.py に以下を追記
 
@@ -98,3 +137,43 @@ def create_story(supabase: Client, user_id: str, story_data: dict) -> dict:
         raise RuntimeError("データの挿入に失敗しました。")
         
     return response.data[0]
+
+def update_story(supabase: Client, story_id: str, user_id: str, story_data: StoryUpdate):
+    update_data = story_data.model_dump(exclude_unset=True)
+    if not update_data:
+        return None
+
+    # 更新処理を実行
+    response = supabase.table("gift_stories") \
+        .update(update_data) \
+        .eq("id", story_id) \
+        .eq("user_id", user_id) \
+        .execute()
+
+    # データが更新されたら、指定のキー名にマッピングして返す
+    if response.data and len(response.data) > 0:
+        row = response.data[0]
+        return {
+            "story_id": row.get("id"),          # DBの id を story_id に詰め替え
+            "updated_at": row.get("updated_at") # DBの更新日時を取得
+        }
+
+    return None
+
+def delete_story(supabase: Client, story_id: str, user_id: str):
+    # 自分の投稿（user_id一致）かつ、対象の体験談（id一致）のみを削除
+    response = supabase.table("gift_stories") \
+        .delete() \
+        .eq("id", story_id) \
+        .eq("user_id", user_id) \
+        .execute()
+
+    # 安全に削除結果をチェック（削除に成功していれば、削除されたデータが1件入っている）
+    if response.data and len(response.data) > 0:
+        row = response.data[0]
+        return {
+            "story_id": row.get("id")
+        }
+
+    # 対象が見つからない、または削除権限がない場合
+    return None

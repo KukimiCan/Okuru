@@ -57,6 +57,12 @@ Okuru では Gemini API を使ってギフト提案を作ります。
 
 認証が必要な API では、`Authorization: Bearer <supabase_jwt>` を受け取ります。
 
+環境変数 `SUPABASE_JWKS_URL` に Supabase の JWKS URL を設定します。
+
+```text
+https://<project-ref>.supabase.co/auth/v1/.well-known/jwks.json
+```
+
 流れ:
 
 1. ヘッダーから JWT を取り出す

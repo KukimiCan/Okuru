@@ -289,6 +289,12 @@ a {
   margin: 0;
 }
 
+.section-title {
+  color: #102a43;
+  font-size: 1.35rem;
+  margin: 0;
+}
+
 .info-panel p {
   color: #52606d;
   line-height: 1.7;

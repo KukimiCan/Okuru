@@ -69,6 +69,16 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
 
+## Backend を Render に置く場合
+
+本番では Render が `$PORT` を渡すため、起動コマンドは次を使います。
+
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+詳しい手順は `docs/backend-deploy-guide.md` を見てください。
+
 ## 実装後の確認項目
 
 - 画面が表示されるか
@@ -113,6 +123,17 @@ GitHub 上で main 向けの Pull Request を作成します。Issue を起点�
 - 未完了の項目
 
 PR を作ったら、必要に応じて Issue 側にもリンクを貼ります。
+
+## GitHub Actions の確認
+
+PR を作ると、GitHub Actions で簡易チェックが実行されます。
+
+実行される内容:
+
+- Frontend: `npm ci` と `npm run build`
+- Backend: `pip install -r requirements.txt`、`python -m unittest -v`、`python -m compileall app`
+
+チェックが失敗した場合は、PR 画面の Checks からエラーログを確認します。
 
 ## 進め方のコツ
 

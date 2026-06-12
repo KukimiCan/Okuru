@@ -10,6 +10,10 @@ class StoryListItem(BaseModel):
     budget_range: str
     created_at: datetime
 
+class MyStoryListItem(StoryListItem):
+    visibility: str
+    updated_at: datetime
+
 class StoryListResponseData(BaseModel):
     items: List[StoryListItem]
     page: int
@@ -18,6 +22,16 @@ class StoryListResponseData(BaseModel):
 
 class StoryListResponse(BaseModel):
     data: StoryListResponseData
+    message: str = "success"
+
+class MyStoryListResponseData(BaseModel):
+    items: List[MyStoryListItem]
+    page: int
+    limit: int
+    total: int
+
+class MyStoryListResponse(BaseModel):
+    data: MyStoryListResponseData
     message: str = "success"
 
 # schemas/story.py に以下を追記
@@ -59,4 +73,35 @@ class StoryCreateResponseData(BaseModel):
 
 class StoryCreateResponse(BaseModel):
     data: StoryCreateResponseData
+    message: str = "success"
+
+# 編集用（PUT）のリクエストボディ
+class StoryUpdate(BaseModel):
+    title: Optional[str] = None
+    relationship: Optional[str] = None
+    purpose: Optional[str] = None
+    budget_range: Optional[str] = None
+    gift_item: Optional[str] = None
+    result: Optional[str] = None
+    body: Optional[str] = None
+    visibility: Optional[str] = None
+    keywords: Optional[List[str]] = None # 配列型に対応
+
+# 編集成功時のレスポンスデータ構造
+class StoryUpdateResponseData(BaseModel):
+    story_id: str         # id から story_id に変更
+    updated_at: datetime  # 追加
+
+# 最終的な共通レスポンス構造
+class StoryUpdateResponse(BaseModel):
+    data: StoryUpdateResponseData
+    message: str = "success"
+
+# 削除成功時のレスポンスデータ構造
+class StoryDeleteResponseData(BaseModel):
+    story_id: str
+
+# 最終的な共通レスポンス構造
+class StoryDeleteResponse(BaseModel):
+    data: StoryDeleteResponseData
     message: str = "success"
