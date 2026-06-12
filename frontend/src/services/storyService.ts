@@ -1,6 +1,12 @@
 import { apiRequest } from "./apiClient";
 import type { PaginatedResponse } from "../types/api";
-import type { Story, StoryInput, StoryListItem, StoryListQuery } from "../types/story";
+import type {
+  Story,
+  StoryInput,
+  StoryListItem,
+  StoryListQuery,
+  StoryUpdateResponse,
+} from "../types/story";
 
 function toQueryString(query: StoryListQuery = {}) {
   const params = new URLSearchParams();
@@ -26,6 +32,13 @@ export function getStory(storyId: string) {
 export function createStory(input: StoryInput) {
   return apiRequest<{ id: string; created_at: string }>("/api/stories", {
     method: "POST",
+    body: input,
+  });
+}
+
+export function updateStory(storyId: string, input: StoryInput) {
+  return apiRequest<StoryUpdateResponse>(`/api/stories/${storyId}`, {
+    method: "PATCH",
     body: input,
   });
 }
