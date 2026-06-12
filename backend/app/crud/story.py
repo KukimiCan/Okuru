@@ -1,5 +1,6 @@
 from typing import Optional, List, Tuple, Dict, Any
 from supabase import Client
+from app.schemas.story import StoryUpdate
 
 def get_public_stories(
     supabase: Client,
@@ -98,3 +99,25 @@ def create_story(supabase: Client, user_id: str, story_data: dict) -> dict:
         raise RuntimeError("データの挿入に失敗しました。")
         
     return response.data[0]
+
+def update_story(supabase: Client, story_id: str, user_id: str, story_data: StoryUpdate):
+    update_data = story_data.model_dump(exclude_unset=True)
+    if not update_data:
+        return None
+
+    # 更新処理を実行
+    response = supabase.table("gift_stories") \
+        .update(update_data) \
+        .eq("id", story_id) \
+        .eq("user_id", user_id) \
+        .execute()
+
+    # データが更新されたら、指定のキー名にマッピングして返す
+    if response.data and len(response.data) > 0:
+        row = response.data[0]
+        return {
+            "story_id": row.get("id"),          # DBの id を story_id に詰め替え
+            "updated_at": row.get("updated_at") # DBの更新日時を取得
+        }
+    
+    return None
