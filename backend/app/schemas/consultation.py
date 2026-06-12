@@ -68,3 +68,31 @@ class ConsultationDetailResponseData(BaseModel):
 class ConsultationDetailResponse(BaseModel):
     data: ConsultationDetailResponseData
     message: str = "success"
+
+
+class ConsultationUpdateRequest(BaseModel):
+    is_favorite: Optional[bool] = None
+    visibility: Optional[str] = None
+    title: Optional[str] = None
+
+
+class ConsultationUpdateResponseData(BaseModel):
+    consultation_id: str
+    is_favorite: bool
+    visibility: str
+    title: str
+    updated_at: Optional[datetime] = None
+
+
+class ConsultationUpdateResponse(BaseModel):
+    data: ConsultationUpdateResponseData
+    message: str = "success"
+
+
+class ConsultationDeleteResponseData(BaseModel):
+    consultation_id: str
+
+
+class ConsultationDeleteResponse(BaseModel):
+    data: ConsultationDeleteResponseData
+    message: str = "success"

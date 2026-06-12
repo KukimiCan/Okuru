@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
-import { getConsultations } from "../services/consultationService";
+import {
+  deleteConsultation,
+  getConsultations,
+  updateConsultation,
+} from "../services/consultationService";
 import type { ConsultationListItem, Visibility } from "../types/consultation";
 
 const visibilityLabels: Record<Visibility, string> = {
@@ -21,6 +25,7 @@ export function ConsultationHistoryPage() {
   const [consultations, setConsultations] = useState<ConsultationListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [pendingId, setPendingId] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -58,6 +63,50 @@ export function ConsultationHistoryPage() {
     () => consultations.filter((consultation) => consultation.is_favorite).length,
     [consultations],
   );
+
+  async function handleFavoriteToggle(consultation: ConsultationListItem) {
+    setPendingId(consultation.id);
+    setErrorMessage("");
+
+    try {
+      const updated = await updateConsultation(consultation.id, {
+        is_favorite: !consultation.is_favorite,
+      });
+      setConsultations((current) =>
+        current.map((item) =>
+          item.id === consultation.id
+            ? { ...item, is_favorite: updated.is_favorite }
+            : item,
+        ),
+      );
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "お気に入り更新に失敗しました。");
+    } finally {
+      setPendingId(null);
+    }
+  }
+
+  async function handleDelete(consultation: ConsultationListItem) {
+    const confirmed = window.confirm(
+      `「${consultation.title}」を削除します。削除すると元に戻せません。よろしいですか？`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setPendingId(consultation.id);
+    setErrorMessage("");
+
+    try {
+      await deleteConsultation(consultation.id);
+      setConsultations((current) => current.filter((item) => item.id !== consultation.id));
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "相談履歴の削除に失敗しました。");
+    } finally {
+      setPendingId(null);
+    }
+  }
 
   return (
     <section className="detail-page">
@@ -111,9 +160,27 @@ export function ConsultationHistoryPage() {
                 <p>{formatDate(consultation.created_at)}</p>
               </div>
 
-              <Link className="button-secondary" to={`/consultations/${consultation.id}`}>
-                詳細を見る
-              </Link>
+              <div className="action-row">
+                <Link className="button-secondary" to={`/consultations/${consultation.id}`}>
+                  詳細を見る
+                </Link>
+                <button
+                  className="button-secondary"
+                  disabled={pendingId === consultation.id}
+                  onClick={() => void handleFavoriteToggle(consultation)}
+                  type="button"
+                >
+                  {consultation.is_favorite ? "お気に入り解除" : "お気に入り"}
+                </button>
+                <button
+                  className="button-danger"
+                  disabled={pendingId === consultation.id}
+                  onClick={() => void handleDelete(consultation)}
+                  type="button"
+                >
+                  削除する
+                </button>
+              </div>
             </article>
           ))}
         </div>
