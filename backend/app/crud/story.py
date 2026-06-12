@@ -49,6 +49,44 @@ def get_public_stories(
     
     return items, total
 
+def get_my_stories(
+    supabase: Client,
+    user_id: str,
+    page: int = 1,
+    limit: int = 10,
+) -> Tuple[List[Dict[str, Any]], int]:
+    query = supabase.table("gift_stories") \
+        .select("id, title, result, budget_range, visibility, created_at, updated_at", count="exact") \
+        .eq("user_id", user_id)
+
+    start_idx = (page - 1) * limit
+    end_idx = start_idx + limit - 1
+
+    response = query.order("created_at", desc=True) \
+        .range(start_idx, end_idx) \
+        .execute()
+
+    items = response.data
+    total = response.count if response.count is not None else 0
+
+    return items, total
+
+def get_my_story_by_id(
+    supabase: Client,
+    story_id: str,
+    user_id: str,
+) -> Optional[Dict[str, Any]]:
+    response = supabase.table("gift_stories") \
+        .select("*") \
+        .eq("id", story_id) \
+        .eq("user_id", user_id) \
+        .execute()
+
+    if not response.data:
+        return None
+
+    return response.data[0]
+
 # crud/story.py に以下を追記
 
 def get_story_by_id(supabase: Client, story_id: str) -> Optional[Dict[str, Any]]:
@@ -119,5 +157,4 @@ def update_story(supabase: Client, story_id: str, user_id: str, story_data: Stor
             "story_id": row.get("id"),          # DBの id を story_id に詰め替え
             "updated_at": row.get("updated_at") # DBの更新日時を取得
         }
-    
     return None
