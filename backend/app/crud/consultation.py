@@ -16,7 +16,6 @@ def _mask_sensitive_text(value: str) -> str:
     text = re.sub(r"\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b", MASKED_TEXT, text)
     text = re.sub(r"\b0\d{1,4}-\d{2,4}-\d{3,4}\b", MASKED_TEXT, text)
     text = re.sub(r"\b(?:山田|鈴木|佐藤|高橋|田中)\w*\b", MASKED_TEXT, text)
-    text = re.sub(r"\b(?:螻ｱ逕ｰ|驤ｴ譛ｨ|菴占陸|鬮俶ｩ弓逕ｰ荳ｭ)\w*\b", MASKED_TEXT, text)
     return text
 
 
@@ -37,19 +36,19 @@ def _build_fallback_result(input_data: Dict[str, Any]) -> Dict[str, Any]:
     )
 
     return {
-        "summary": "Here are practical gift ideas based on the consultation conditions.",
+        "summary": "相談条件をもとに、日常で使いやすく相手の負担になりにくいギフト候補を整理しました。",
         "gift_candidates": [
             {
-                "name": "Practical gift set",
-                "reason": "It is easy to use in daily life and works even when preferences are not fully known.",
+                "name": "実用的なギフトセット",
+                "reason": "好みが細かく分からない相手にも渡しやすく、日常生活で自然に使ってもらいやすいためです。",
                 "budget_range": budget_range,
-                "caution": "Check size, scent, allergies, and storage space before buying.",
-                "suitable_for": "General recipient",
-                "message": "Thank you as always. I hope this is useful for you.",
+                "caution": "購入前にサイズ、香り、アレルギー、保管場所に困らないかを確認してください。",
+                "suitable_for": "実用性を重視する相手",
+                "message": "いつもありがとう。よかったら日々の中で使ってください。",
             }
         ],
-        "tips": ["Choose something the recipient can use naturally in daily life."],
-        "avoid": ["Avoid strong scents, oversized items, and gifts with very specific taste requirements."],
+        "tips": ["相手が普段の生活で無理なく使えるものを選ぶと、失敗しにくくなります。"],
+        "avoid": ["香りが強いもの、大きすぎるもの、好みが強く分かれるものは避けると安心です。"],
     }
 
 
