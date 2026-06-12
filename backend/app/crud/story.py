@@ -121,16 +121,3 @@ def update_story(supabase: Client, story_id: str, user_id: str, story_data: Stor
         }
     
     return None
-
-def delete_story(supabase: Client, story_id: str, user_id: str) -> Optional[Dict[str, str]]:
-    response = supabase.table("gift_stories") \
-        .delete() \
-        .eq("id", story_id) \
-        .eq("user_id", user_id) \
-        .execute()
-
-    if response.data and len(response.data) > 0:
-        row = response.data[0]
-        return {"story_id": row.get("id")}
-
-    return None

@@ -82,10 +82,3 @@ class StoryUpdateResponseData(BaseModel):
 class StoryUpdateResponse(BaseModel):
     data: StoryUpdateResponseData
     message: str = "success"
-
-class StoryDeleteResponseData(BaseModel):
-    story_id: str
-
-class StoryDeleteResponse(BaseModel):
-    data: StoryDeleteResponseData
-    message: str = "success"
