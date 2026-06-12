@@ -101,7 +101,11 @@ Okuru/
 ### frontend/.env.example
 
 ```env
+# Local FastAPI URL. In Vercel, set this to the deployed backend URL.
 VITE_API_BASE_URL=http://localhost:8000
+
+# Supabase browser-safe project settings.
+# These values are public in the built frontend. Do not put service role keys here.
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
 ```
@@ -172,6 +176,13 @@ pip install -r requirements.txt
 - `VITE_API_BASE_URL`: FastAPI のベースURL
 - `VITE_SUPABASE_URL`: Supabase プロジェクトURL
 - `VITE_SUPABASE_ANON_KEY`: Supabase の anon key
+
+Frontend deployment notes:
+
+- Local `VITE_API_BASE_URL` is usually `http://localhost:8000`.
+- Vercel `VITE_API_BASE_URL` must be the deployed backend origin, for example `https://<backend-app>.onrender.com`.
+- Do not include `/api` at the end of `VITE_API_BASE_URL`; frontend services add `/api/...`.
+- `VITE_SUPABASE_ANON_KEY` is public by design. Never put `SUPABASE_SERVICE_ROLE_KEY` in frontend env values.
 
 ### Backend
 

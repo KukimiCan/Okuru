@@ -26,7 +26,11 @@
 ## frontend/.env.example
 
 ```env
+# Local FastAPI URL. In Vercel, set this to the deployed backend URL.
 VITE_API_BASE_URL=http://localhost:8000
+
+# Supabase browser-safe project settings.
+# These values are public in the built frontend. Do not put service role keys here.
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
 ```
@@ -36,6 +40,31 @@ VITE_SUPABASE_ANON_KEY=
 - `VITE_API_BASE_URL`: FastAPI の URL
 - `VITE_SUPABASE_URL`: Supabase のプロジェクト URL
 - `VITE_SUPABASE_ANON_KEY`: フロントから使う公開用のキー
+
+## Frontend values for each environment
+
+Local development:
+
+```env
+VITE_API_BASE_URL=http://localhost:8000
+VITE_SUPABASE_URL=https://<project-ref>.supabase.co
+VITE_SUPABASE_ANON_KEY=<supabase-anon-key>
+```
+
+Vercel production:
+
+```env
+VITE_API_BASE_URL=https://<backend-app>.onrender.com
+VITE_SUPABASE_URL=https://<project-ref>.supabase.co
+VITE_SUPABASE_ANON_KEY=<supabase-anon-key>
+```
+
+Notes:
+
+- `VITE_API_BASE_URL` is the backend origin only. Do not include `/api` at the end.
+- `VITE_SUPABASE_ANON_KEY` is safe to expose to the browser, but `SUPABASE_SERVICE_ROLE_KEY` is not.
+- After changing Vercel environment variables, redeploy the frontend.
+- Keep real values in `frontend/.env` or Vercel project settings. Do not commit them.
 
 ## backend/.env.example
 
