@@ -4,31 +4,89 @@ from typing import Any, Dict, Optional
 
 from supabase import Client
 
+from app.services.ai_prompt import build_ai_prompt_messages, call_gemini
+
 
 MASKED_TEXT = "[マスキング済み]"
+AI_SUMMARY_KEY = "AI回答要約"
 
 
 def _mask_sensitive_text(value: str) -> str:
-    """MVP向けの簡易マスキング。氏名や電話番号を除去して、調査用に要約を残す。"""
     text = value
     text = re.sub(r"\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b", MASKED_TEXT, text)
     text = re.sub(r"\b0\d{1,4}-\d{2,4}-\d{3,4}\b", MASKED_TEXT, text)
     text = re.sub(r"\b(?:山田|鈴木|佐藤|高橋|田中)\w*\b", MASKED_TEXT, text)
+    text = re.sub(r"\b(?:螻ｱ逕ｰ|驤ｴ譛ｨ|菴占陸|鬮俶ｩ弓逕ｰ荳ｭ)\w*\b", MASKED_TEXT, text)
     return text
 
 
 def sanitize_for_storage(input_data: Dict[str, Any]) -> Dict[str, Any]:
-    """DB保存用に個人情報をマスクした入力データを返す。"""
     sanitized = dict(input_data)
     if isinstance(sanitized.get("note"), str):
         sanitized["note"] = _mask_sensitive_text(sanitized["note"])
     return sanitized
 
 
-def build_log_payload(input_data: Dict[str, Any], ai_summary: str, status: str, error_details: Optional[str]) -> Dict[str, Any]:
-    """相談ログの最小保存形式を返す。"""
+def _build_fallback_result(input_data: Dict[str, Any]) -> Dict[str, Any]:
+    budget_min = input_data.get("budget_min")
+    budget_max = input_data.get("budget_max")
+    budget_range = (
+        f"{budget_min}-{budget_max} JPY"
+        if budget_min is not None and budget_max is not None
+        else "Adjust to budget"
+    )
+
+    return {
+        "summary": "Here are practical gift ideas based on the consultation conditions.",
+        "gift_candidates": [
+            {
+                "name": "Practical gift set",
+                "reason": "It is easy to use in daily life and works even when preferences are not fully known.",
+                "budget_range": budget_range,
+                "caution": "Check size, scent, allergies, and storage space before buying.",
+                "suitable_for": "General recipient",
+                "message": "Thank you as always. I hope this is useful for you.",
+            }
+        ],
+        "tips": ["Choose something the recipient can use naturally in daily life."],
+        "avoid": ["Avoid strong scents, oversized items, and gifts with very specific taste requirements."],
+    }
+
+
+def _normalize_result(value: Any, input_data: Dict[str, Any]) -> Dict[str, Any]:
+    fallback = _build_fallback_result(input_data)
+    if not isinstance(value, dict):
+        return fallback
+
+    candidates = value.get("gift_candidates")
+    if not isinstance(candidates, list) or len(candidates) == 0:
+        return fallback
+
+    return {
+        "summary": value.get("summary") if isinstance(value.get("summary"), str) and value.get("summary") else fallback["summary"],
+        "gift_candidates": candidates,
+        "tips": value.get("tips") if isinstance(value.get("tips"), list) and value.get("tips") else fallback["tips"],
+        "avoid": value.get("avoid") if isinstance(value.get("avoid"), list) and value.get("avoid") else fallback["avoid"],
+    }
+
+
+def _generate_result(input_data: Dict[str, Any]) -> Dict[str, Any]:
+    try:
+        response = call_gemini(build_ai_prompt_messages(input_data))
+        text = response.get("text") if isinstance(response, dict) else None
+        output = text.get("output") if isinstance(text, dict) else None
+        return _normalize_result(output, input_data)
+    except Exception:
+        return _build_fallback_result(input_data)
+
+
+def build_log_payload(
+    input_data: Dict[str, Any],
+    ai_summary: str,
+    status: str,
+    error_details: Optional[str],
+) -> Dict[str, Any]:
     sanitized_input = sanitize_for_storage(input_data)
-    note = sanitized_input.get("note", "")
 
     return {
         "consulted_at": datetime.now(timezone.utc).isoformat(),
@@ -38,10 +96,11 @@ def build_log_payload(input_data: Dict[str, Any], ai_summary: str, status: str, 
         "purpose": sanitized_input.get("purpose"),
         "budget_min": sanitized_input.get("budget_min"),
         "budget_max": sanitized_input.get("budget_max"),
-        "note": note,
-        "AI回答要約": ai_summary,
+        "note": sanitized_input.get("note", ""),
+        AI_SUMMARY_KEY: ai_summary,
         "error_details": error_details,
     }
+
 
 def get_consultations(
     supabase: Client,
@@ -49,60 +108,57 @@ def get_consultations(
     page: int = 1,
     limit: int = 10,
     favorite: Optional[bool] = None,
-    visibility: Optional[str] = None
-):
-    # ページネーションの開始位置
+    visibility: Optional[str] = None,
+) -> Dict[str, Any]:
     start = (page - 1) * limit
     end = start + limit - 1
 
-    # 基本クエリの構築（ログインユーザーのデータのみ）
-    # count="exact" を指定することで総件数（total）も取得できます
     query = supabase.table("gift_consultations").select(
-        "id, title, is_favorite, visibility, created_at", 
-        count="exact"
+        "id, title, is_favorite, visibility, created_at",
+        count="exact",
     ).eq("user_id", user_id)
 
-    # フィルター条件の追加
     if favorite is not None:
         query = query.eq("is_favorite", favorite)
     if visibility is not None:
         query = query.eq("visibility", visibility)
 
-    # 順序並び替え（新しい順）と範囲指定（ページネーション）
     response = query.order("created_at", desc=True).range(start, end).execute()
 
     return {
         "items": response.data,
         "page": page,
         "limit": limit,
-        "total": response.count if response.count is not None else len(response.data)
+        "total": response.count if response.count is not None else len(response.data),
     }
 
+
+def _to_detail_response(saved: Dict[str, Any], fallback_input: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    input_data = saved.get("input_conditions") or fallback_input or {}
+    ai_response = saved.get("ai_response") or {}
+
+    return {
+        "id": saved["id"],
+        "title": saved["title"],
+        "input": input_data,
+        "result": _normalize_result(ai_response, input_data),
+        "is_favorite": saved.get("is_favorite", False),
+        "visibility": saved.get("visibility", "private"),
+        "created_at": saved.get("created_at"),
+    }
+
+
 def create_consultation(supabase: Client, user_id: str, consultation_data: Dict[str, Any]) -> Dict[str, Any]:
-    """相談内容をDBへ保存し、調査用の簡易ログを残す。"""
-    ai_summary = (
-        f"{consultation_data.get('relationship', '未指定')}向けに、"
-        f"{consultation_data.get('purpose', '未指定')}を目的にした提案を作成します。"
-    )
+    sanitized_input = sanitize_for_storage(consultation_data)
+    result = _generate_result(sanitized_input)
     status = "success"
     error_details = None
 
-    try:
-        # MVPでは Gemini 呼び出しが未設定でも保存できるよう、簡易サマリを優先して使う。
-        if consultation_data.get("note"):
-            ai_summary = ai_summary + " 補足メモは保存済みです。"
-    except Exception as exc:  # pragma: no cover - defensive fallback
-        status = "error"
-        error_details = str(exc)
-
-    sanitized_input = sanitize_for_storage(consultation_data)
-
-    # 相談履歴保存前に profiles レコードを確保し、FK 制約を満たす。
     supabase.table("profiles").upsert({"id": user_id}, on_conflict="id").execute()
 
     log_payload = build_log_payload(
         input_data=sanitized_input,
-        ai_summary=ai_summary,
+        ai_summary=result["summary"],
         status=status,
         error_details=error_details,
     )
@@ -113,9 +169,9 @@ def create_consultation(supabase: Client, user_id: str, consultation_data: Dict[
         "input_conditions": sanitized_input,
         "ai_response": {
             "status": status,
-            "summary": ai_summary,
             "error": error_details,
             "log": log_payload,
+            **result,
         },
         "visibility": "private",
         "is_favorite": False,
@@ -126,32 +182,22 @@ def create_consultation(supabase: Client, user_id: str, consultation_data: Dict[
         raise RuntimeError("相談履歴の保存に失敗しました。")
 
     saved = response.data[0]
-    ai_response = saved.get("ai_response", {}) or {}
-
     return {
         "consultation_id": saved["id"],
         "input": saved.get("input_conditions", sanitized_input),
-        "result": {
-            "summary": ai_response.get("summary", ""),
-            "gift_candidates": ai_response.get("gift_candidates", []),
-            "tips": ai_response.get("tips", []),
-            "avoid": ai_response.get("avoid", []),
-        },
+        "result": _normalize_result(saved.get("ai_response"), sanitized_input),
         "created_at": saved.get("created_at"),
     }
 
 
 def get_consultation_detail(supabase: Client, consultation_id: str, user_id: str):
-    # .maybe_single() を外し、普通に条件に合うデータを取得する
     response = supabase.table("gift_consultations") \
         .select("id, title, input_conditions, ai_response, is_favorite, visibility, created_at") \
         .eq("id", consultation_id) \
         .eq("user_id", user_id) \
         .execute()
-        
-    # response.data が存在し、中身が空でなければ最初の1件（インデックス0）を返す
+
     if response.data and len(response.data) > 0:
-        return response.data[0]
-        
-    # データが1件も見つからなかった（または他人のデータだった）場合は None を返す
+        return _to_detail_response(response.data[0])
+
     return None

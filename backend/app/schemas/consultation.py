@@ -55,8 +55,8 @@ class ConsultationListResponse(BaseModel):
 class ConsultationDetailResponseData(BaseModel):
     id: str
     title: str
-    input_conditions: Dict[str, Any]
-    ai_response: Dict[str, Any]
+    input: Dict[str, Any]
+    result: Dict[str, Any]
     is_favorite: bool
     visibility: str
     created_at: datetime
