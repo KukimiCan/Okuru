@@ -37,7 +37,7 @@ export function ConsultationDetailPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (!consultationId || stateConsultation) {
+    if (!consultationId) {
       return;
     }
 
@@ -49,8 +49,10 @@ export function ConsultationDetailPage() {
         setIsFavorite(data.is_favorite);
       })
       .catch(() => {
-        setResult(mockConsultationResult);
-        setErrorMessage("APIから取得できないため、表示例を表示しています。");
+        if (!stateConsultation) {
+          setResult(mockConsultationResult);
+          setErrorMessage("APIから取得できないため、表示例を表示しています。");
+        }
       });
   }, [consultationId, stateConsultation]);
 

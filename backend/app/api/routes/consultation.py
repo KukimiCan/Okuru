@@ -96,11 +96,19 @@ def patch_consultation(
     current_user_id: str = Depends(get_current_user),
     supabase = Depends(get_supabase)
 ):
+    update_data = consultation_in.model_dump(exclude_unset=True, exclude_none=True)
+
+    if not update_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="更新する項目を指定してください。",
+        )
+
     updated = update_consultation(
         supabase=supabase,
         consultation_id=consultation_id,
         user_id=current_user_id,
-        consultation_data=consultation_in.model_dump(exclude_unset=True),
+        consultation_data=update_data,
     )
 
     if not updated:

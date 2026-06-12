@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -72,7 +72,7 @@ class ConsultationDetailResponse(BaseModel):
 
 class ConsultationUpdateRequest(BaseModel):
     is_favorite: Optional[bool] = None
-    visibility: Optional[str] = None
+    visibility: Optional[Literal["public", "private", "unlisted"]] = None
     title: Optional[str] = None
 
 
