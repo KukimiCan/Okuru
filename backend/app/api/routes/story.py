@@ -42,6 +42,7 @@ def read_stories(
             total=total
         )
     )
+
 # パスパラメータ {story_id} を指定した詳細取得API
 @router.get("/{story_id}", response_model=StoryDetailResponse)
 def read_story(
@@ -99,7 +100,7 @@ def patch_story(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="指定された体験談が見つからないか、編集権限がありません。"
         )
-        
+
     return StoryUpdateResponse(data=updated_story_data)
 
 @router.delete("/{story_id}", response_model=StoryDeleteResponse)
@@ -114,12 +115,12 @@ def remove_story(
         story_id=story_id,
         user_id=current_user_id
     )
-    
+
     # 存在しない、または他人の体験談だった場合（削除されなかった場合）
     if not deleted_story_data:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="指定された体験談が見つからないか、削除権限がありません。"
         )
-        
+
     return StoryDeleteResponse(data=deleted_story_data)

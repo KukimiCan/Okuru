@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { FormErrorList } from "../components/forms/FormErrorList";
 import { useAuth } from "../features/auth/AuthContext";
 import { hasValidationErrors, validateStoryInput, type ValidationErrors } from "../lib/validation";
-import { getStory, updateStory } from "../services/storyService";
+import { getMyStory, updateStory } from "../services/storyService";
 import type { StoryInput, StoryResult } from "../types/story";
 
 const initialForm = {
@@ -37,7 +37,7 @@ export function StoryEditPage() {
       return;
     }
 
-    getStory(storyId)
+    getMyStory(storyId)
       .then((story) => {
         if (story.user_id && user?.id && story.user_id !== user.id) {
           setBlockingError("自分が投稿した体験談だけ編集できます。");
@@ -110,7 +110,7 @@ export function StoryEditPage() {
 
     try {
       const updated = await updateStory(storyId, input);
-      navigate(`/stories/${updated.story_id}`);
+      navigate(input.visibility === "public" ? `/stories/${updated.story_id}` : "/mypage");
     } catch (error) {
       setErrorMessage(
         error instanceof Error

@@ -19,12 +19,21 @@ export type StoryUpdateResponse = {
   updated_at: string;
 };
 
+export type StoryDeleteResponse = {
+  story_id: string;
+};
+
 export type StoryListItem = {
   id: string;
   title: string;
   result: StoryResult;
   budget_range: string;
   created_at: string;
+};
+
+export type MyStoryListItem = StoryListItem & {
+  visibility: Visibility;
+  updated_at: string;
 };
 
 export type Story = StoryInput & {
