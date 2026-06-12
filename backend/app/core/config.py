@@ -17,6 +17,7 @@ class Settings:
     SUPABASE_URL: str | None = os.getenv("SUPABASE_URL")
     SUPABASE_SERVICE_ROLE_KEY: str | None = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
     SUPABASE_JWT_SECRET: str | None = os.getenv("SUPABASE_JWT_SECRET")
+    SUPABASE_JWKS_URL: str | None = os.getenv("SUPABASE_JWKS_URL")
     GEMINI_API_KEY: str | None = os.getenv("GEMINI_API_KEY")
     GEMINI_MODEL: str | None = os.getenv("GEMINI_MODEL")
     CORS_ORIGINS: str = os.getenv(
@@ -40,6 +41,10 @@ class Settings:
             origins.append(vercel_origin)
 
         return list(dict.fromkeys(origins))
+
+    @property
+    def supabase_jwks_url(self) -> str | None:
+        return self.SUPABASE_JWKS_URL or self.SUPABASE_JWT_SECRET
 
 
 settings = Settings()

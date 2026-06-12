@@ -69,6 +69,16 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
 
+## Backend を Render に置く場合
+
+本番では Render が `$PORT` を渡すため、起動コマンドは次を使います。
+
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+詳しい手順は `docs/backend-deploy-guide.md` を見てください。
+
 ## 実装後の確認項目
 
 - 画面が表示されるか

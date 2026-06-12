@@ -72,7 +72,7 @@ Notes:
 APP_ENV=development
 SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
-SUPABASE_JWT_SECRET=
+SUPABASE_JWKS_URL=
 GEMINI_API_KEY=
 GEMINI_MODEL=
 CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
@@ -85,7 +85,7 @@ VERCEL_URL=
 - `APP_ENV`: 開発用か本番用かを切り替える
 - `SUPABASE_URL`: Supabase のプロジェクト URL
 - `SUPABASE_SERVICE_ROLE_KEY`: バックエンドだけで使う強い権限のキー
-- `SUPABASE_JWT_SECRET`: Supabase Auth の JWT を検証するための情報
+- `SUPABASE_JWKS_URL`: Supabase Auth の JWT を検証するための JWKS URL
 - `GEMINI_API_KEY`: Gemini API を使うためのキー
 - `GEMINI_MODEL`: 使う Gemini モデル名
 - `CORS_ORIGINS`: フロントエンドからのアクセスを許可する URL。複数ある場合はカンマ区切り
@@ -110,6 +110,24 @@ VERCEL_URL=
 - `VITE_` が付いている変数は、フロントから見える前提で扱う
 - バックエンドの秘密情報をフロントに置かない
 - 本番環境とローカル環境で値を分ける
+
+## Backend production values for Render
+
+Render に backend を置く場合は、次の値を Environment に設定します。
+
+```env
+APP_ENV=production
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<supabase-service-role-key>
+SUPABASE_JWKS_URL=https://<project-ref>.supabase.co/auth/v1/.well-known/jwks.json
+GEMINI_API_KEY=<gemini-api-key>
+GEMINI_MODEL=<gemini-model-name>
+CORS_ORIGINS=https://<frontend-app>.vercel.app
+FRONTEND_URL=https://<frontend-app>.vercel.app
+```
+
+`SUPABASE_JWKS_URL` は Supabase の公開鍵情報を取得する URL です。
+古い `.env` に `SUPABASE_JWT_SECRET` がある場合も backend は読み取りますが、新しく設定する場合は `SUPABASE_JWKS_URL` を使ってください。
 
 ## 迷ったら
 

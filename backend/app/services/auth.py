@@ -6,13 +6,29 @@ from app.core.config import settings
 security = HTTPBearer()
 
 # JWKSのURLから公開鍵を自動取得・キャッシュしてくれるクライアントを初期化
-jwks_client = jwt.PyJWKClient(settings.SUPABASE_JWT_SECRET)
+_jwks_client: jwt.PyJWKClient | None = None
+
+
+def _get_jwks_client() -> jwt.PyJWKClient:
+    global _jwks_client
+
+    if _jwks_client is not None:
+        return _jwks_client
+
+    if not settings.supabase_jwks_url:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="SUPABASE_JWKS_URL が設定されていません。",
+        )
+
+    _jwks_client = jwt.PyJWKClient(settings.supabase_jwks_url)
+    return _jwks_client
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str:
     token = credentials.credentials
     try:
         # 1. 送られてきたJWTのヘッダーを見て、適切な公開鍵（signing_key）を自動でフェッチする
-        signing_key = jwks_client.get_signing_key_from_jwt(token)
+        signing_key = _get_jwks_client().get_signing_key_from_jwt(token)
         
         # 2. その公開鍵を使ってトークンをデコード
         payload = jwt.decode(

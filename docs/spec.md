@@ -177,7 +177,7 @@ Okuru は、贈る相手の情報をもとに AI がギフト候補を提案し�
 
 `frontend/.env.example` には `VITE_API_BASE_URL=http://localhost:8000`、`VITE_SUPABASE_URL`、`VITE_SUPABASE_ANON_KEY` を置く。
 
-`backend/.env.example` には `APP_ENV=development`、`SUPABASE_URL`、`SUPABASE_SERVICE_ROLE_KEY`、`SUPABASE_JWT_SECRET`、`GEMINI_API_KEY`、`GEMINI_MODEL`、`CORS_ORIGINS=http://localhost:5173` を置く。
+`backend/.env.example` には `APP_ENV=development`、`SUPABASE_URL`、`SUPABASE_SERVICE_ROLE_KEY`、`SUPABASE_JWKS_URL`、`GEMINI_API_KEY`、`GEMINI_MODEL`、`CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173` を置く。
 
 `DATABASE_URL` は必要に応じて追加する任意項目として扱う。
 
