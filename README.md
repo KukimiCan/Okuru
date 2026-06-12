@@ -36,6 +36,7 @@ Okuru は、AIの提案と人間のリアルな経験談を組み合わせて、
 3. 実装後に PR を作成して main へ戻す
 
 Issue 起点でブランチと PR を作ると、誰が何を進めているか分かりやすくなります。
+PR 作成時には GitHub Actions で frontend build と backend test の簡易チェックが実行されます。
 
 ## 技術スタック
 
