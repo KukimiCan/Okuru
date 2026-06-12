@@ -121,3 +121,21 @@ def update_story(supabase: Client, story_id: str, user_id: str, story_data: Stor
         }
     
     return None
+
+def delete_story(supabase: Client, story_id: str, user_id: str):
+    # 自分の投稿（user_id一致）かつ、対象の体験談（id一致）のみを削除
+    response = supabase.table("gift_stories") \
+        .delete() \
+        .eq("id", story_id) \
+        .eq("user_id", user_id) \
+        .execute()
+
+    # 安全に削除結果をチェック（削除に成功していれば、削除されたデータが1件入っている）
+    if response.data and len(response.data) > 0:
+        row = response.data[0]
+        return {
+            "story_id": row.get("id")
+        }
+    
+    # 対象が見つからない、または削除権限がない場合
+    return None

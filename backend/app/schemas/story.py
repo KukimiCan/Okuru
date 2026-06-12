@@ -82,3 +82,12 @@ class StoryUpdateResponseData(BaseModel):
 class StoryUpdateResponse(BaseModel):
     data: StoryUpdateResponseData
     message: str = "success"
+
+# 削除成功時のレスポンスデータ構造
+class StoryDeleteResponseData(BaseModel):
+    story_id: str
+
+# 最終的な共通レスポンス構造
+class StoryDeleteResponse(BaseModel):
+    data: StoryDeleteResponseData
+    message: str = "success"
