@@ -3,9 +3,11 @@ import type { PaginatedResponse } from "../types/api";
 import type {
   ConsultationCreateResponse,
   ConsultationDetail,
+  ConsultationDeleteResponse,
   ConsultationInput,
   ConsultationListItem,
   ConsultationUpdateInput,
+  ConsultationUpdateResponse,
 } from "../types/consultation";
 
 export function createConsultation(input: ConsultationInput) {
@@ -27,8 +29,14 @@ export function updateConsultation(
   consultationId: string,
   input: ConsultationUpdateInput,
 ) {
-  return apiRequest(`/api/consultations/${consultationId}`, {
+  return apiRequest<ConsultationUpdateResponse>(`/api/consultations/${consultationId}`, {
     method: "PATCH",
     body: input,
+  });
+}
+
+export function deleteConsultation(consultationId: string) {
+  return apiRequest<ConsultationDeleteResponse>(`/api/consultations/${consultationId}`, {
+    method: "DELETE",
   });
 }

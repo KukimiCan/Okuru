@@ -6,10 +6,19 @@ from app.services.auth import get_current_user
 from app.schemas.consultation import (
     ConsultationCreateRequest,
     ConsultationCreateResponse,
+    ConsultationDeleteResponse,
     ConsultationDetailResponse,
     ConsultationListResponse,
+    ConsultationUpdateRequest,
+    ConsultationUpdateResponse,
 )
-from app.crud.consultation import create_consultation, get_consultation_detail, get_consultations
+from app.crud.consultation import (
+    create_consultation,
+    delete_consultation,
+    get_consultation_detail,
+    get_consultations,
+    update_consultation,
+)
 
 router = APIRouter(prefix="/consultations", tags=["consultations"])
 
@@ -79,3 +88,53 @@ def get_consultation(
         )
         
     return ConsultationDetailResponse(data=detail_data)
+
+@router.patch("/{consultation_id}", response_model=ConsultationUpdateResponse)
+def patch_consultation(
+    consultation_id: str,
+    consultation_in: ConsultationUpdateRequest,
+    current_user_id: str = Depends(get_current_user),
+    supabase = Depends(get_supabase)
+):
+    update_data = consultation_in.model_dump(exclude_unset=True, exclude_none=True)
+
+    if not update_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="更新する項目を指定してください。",
+        )
+
+    updated = update_consultation(
+        supabase=supabase,
+        consultation_id=consultation_id,
+        user_id=current_user_id,
+        consultation_data=update_data,
+    )
+
+    if not updated:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="指定された相談履歴が見つからないか、更新権限がありません。",
+        )
+
+    return ConsultationUpdateResponse(data=updated)
+
+@router.delete("/{consultation_id}", response_model=ConsultationDeleteResponse)
+def delete_consultation_record(
+    consultation_id: str,
+    current_user_id: str = Depends(get_current_user),
+    supabase = Depends(get_supabase)
+):
+    deleted = delete_consultation(
+        supabase=supabase,
+        consultation_id=consultation_id,
+        user_id=current_user_id,
+    )
+
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="指定された相談履歴が見つからないか、削除権限がありません。",
+        )
+
+    return ConsultationDeleteResponse(data=deleted)

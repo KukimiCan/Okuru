@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -67,4 +67,32 @@ class ConsultationDetailResponseData(BaseModel):
 # 最終的な共通レスポンス構造
 class ConsultationDetailResponse(BaseModel):
     data: ConsultationDetailResponseData
+    message: str = "success"
+
+
+class ConsultationUpdateRequest(BaseModel):
+    is_favorite: Optional[bool] = None
+    visibility: Optional[Literal["public", "private", "unlisted"]] = None
+    title: Optional[str] = None
+
+
+class ConsultationUpdateResponseData(BaseModel):
+    consultation_id: str
+    is_favorite: bool
+    visibility: str
+    title: str
+    updated_at: Optional[datetime] = None
+
+
+class ConsultationUpdateResponse(BaseModel):
+    data: ConsultationUpdateResponseData
+    message: str = "success"
+
+
+class ConsultationDeleteResponseData(BaseModel):
+    consultation_id: str
+
+
+class ConsultationDeleteResponse(BaseModel):
+    data: ConsultationDeleteResponseData
     message: str = "success"
