@@ -2,6 +2,7 @@ import { apiRequest } from "./apiClient";
 import type { PaginatedResponse } from "../types/api";
 import type {
   Story,
+  StoryDeleteResponse,
   StoryInput,
   StoryListItem,
   StoryListQuery,
@@ -40,5 +41,11 @@ export function updateStory(storyId: string, input: StoryInput) {
   return apiRequest<StoryUpdateResponse>(`/api/stories/${storyId}`, {
     method: "PATCH",
     body: input,
+  });
+}
+
+export function deleteStory(storyId: string) {
+  return apiRequest<StoryDeleteResponse>(`/api/stories/${storyId}`, {
+    method: "DELETE",
   });
 }
