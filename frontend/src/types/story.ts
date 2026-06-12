@@ -14,6 +14,11 @@ export type StoryInput = {
   keywords: string[];
 };
 
+export type StoryUpdateResponse = {
+  story_id: string;
+  updated_at: string;
+};
+
 export type StoryListItem = {
   id: string;
   title: string;
@@ -24,7 +29,9 @@ export type StoryListItem = {
 
 export type Story = StoryInput & {
   id: string;
+  user_id?: string;
   created_at: string;
+  updated_at?: string;
 };
 
 export type StoryListQuery = {

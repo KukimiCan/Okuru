@@ -10,6 +10,7 @@ import { LoginPage } from "../pages/LoginPage";
 import { MyPage } from "../pages/MyPage";
 import { NotFoundPage } from "../pages/NotFoundPage";
 import { StoryDetailPage } from "../pages/StoryDetailPage";
+import { StoryEditPage } from "../pages/StoryEditPage";
 import { StoryListPage } from "../pages/StoryListPage";
 import { StoryNewPage } from "../pages/StoryNewPage";
 
@@ -21,6 +22,7 @@ export const routes = {
   consultationHistory: "/consultations",
   stories: "/stories",
   storyDetail: "/stories/:storyId",
+  storyEdit: "/stories/:storyId/edit",
   storyNew: "/stories/new",
   mypage: "/mypage",
 } as const;
@@ -58,6 +60,14 @@ export const router = createBrowserRouter([
       },
       { path: routes.stories, element: <StoryListPage /> },
       { path: routes.storyDetail, element: <StoryDetailPage /> },
+      {
+        path: routes.storyEdit,
+        element: (
+          <ProtectedRoute>
+            <StoryEditPage />
+          </ProtectedRoute>
+        ),
+      },
       {
         path: routes.storyNew,
         element: (

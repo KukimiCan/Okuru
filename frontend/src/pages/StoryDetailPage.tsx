@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
+import { useAuth } from "../features/auth/AuthContext";
 import { mockStories } from "../lib/mockData";
 import { getStory } from "../services/storyService";
 import type { Story, StoryResult } from "../types/story";
@@ -13,6 +14,7 @@ const resultLabels: Record<StoryResult, string> = {
 
 export function StoryDetailPage() {
   const { storyId } = useParams();
+  const { user } = useAuth();
   const [story, setStory] = useState<Story | null>(null);
   const [notice, setNotice] = useState("");
 
@@ -33,6 +35,7 @@ export function StoryDetailPage() {
   }, [storyId]);
 
   const displayStory = story ?? mockStories[0];
+  const canEdit = Boolean(user && displayStory.user_id && displayStory.user_id === user.id);
 
   return (
     <section className="detail-page">
@@ -82,9 +85,16 @@ export function StoryDetailPage() {
         </div>
       </dl>
 
-      <Link className="button-secondary" to="/stories">
-        一覧へ戻る
-      </Link>
+      <div className="action-row">
+        {canEdit && storyId ? (
+          <Link className="button-primary" to={`/stories/${storyId}/edit`}>
+            編集する
+          </Link>
+        ) : null}
+        <Link className="button-secondary" to="/stories">
+          一覧へ戻る
+        </Link>
+      </div>
     </section>
   );
 }
