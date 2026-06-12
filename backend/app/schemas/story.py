@@ -60,3 +60,25 @@ class StoryCreateResponseData(BaseModel):
 class StoryCreateResponse(BaseModel):
     data: StoryCreateResponseData
     message: str = "success"
+
+# 編集用（PUT）のリクエストボディ
+class StoryUpdate(BaseModel):
+    title: Optional[str] = None
+    relationship: Optional[str] = None
+    purpose: Optional[str] = None
+    budget_range: Optional[str] = None
+    gift_item: Optional[str] = None
+    result: Optional[str] = None
+    body: Optional[str] = None
+    visibility: Optional[str] = None
+    keywords: Optional[List[str]] = None # 配列型に対応
+
+# 編集成功時のレスポンスデータ構造
+class StoryUpdateResponseData(BaseModel):
+    story_id: str         # id から story_id に変更
+    updated_at: datetime  # 追加
+
+# 最終的な共通レスポンス構造
+class StoryUpdateResponse(BaseModel):
+    data: StoryUpdateResponseData
+    message: str = "success"
