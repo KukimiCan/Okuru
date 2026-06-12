@@ -140,10 +140,13 @@ a {
 }
 
 .button-primary,
-.button-secondary {
+.button-secondary,
+.button-danger {
   align-items: center;
   border-radius: 8px;
+  border: 0;
   display: inline-flex;
+  font: inherit;
   font-weight: 700;
   justify-content: center;
   min-height: 44px;
@@ -160,6 +163,12 @@ a {
   border: 1px solid #bcccdc;
   background: #ffffff;
   color: #243b53;
+}
+
+.button-danger {
+  background: #b91c1c;
+  color: #ffffff;
+  cursor: pointer;
 }
 
 .form-stack {
@@ -230,7 +239,8 @@ a {
   max-width: 680px;
 }
 
-.button-primary:disabled {
+.button-primary:disabled,
+.button-danger:disabled {
   cursor: not-allowed;
   opacity: 0.65;
 }
@@ -251,6 +261,12 @@ a {
 .info-panel h2 {
   color: #102a43;
   font-size: 1.08rem;
+  margin: 0;
+}
+
+.section-title {
+  color: #102a43;
+  font-size: 1.35rem;
   margin: 0;
 }
 
