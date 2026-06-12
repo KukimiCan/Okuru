@@ -201,3 +201,56 @@ def get_consultation_detail(supabase: Client, consultation_id: str, user_id: str
         return _to_detail_response(response.data[0])
 
     return None
+
+
+def update_consultation(
+    supabase: Client,
+    consultation_id: str,
+    user_id: str,
+    consultation_data: Dict[str, Any],
+) -> Optional[Dict[str, Any]]:
+    allowed_fields = {"is_favorite", "visibility", "title"}
+    update_data = {
+        key: value
+        for key, value in consultation_data.items()
+        if key in allowed_fields and value is not None
+    }
+
+    if not update_data:
+        return None
+
+    response = supabase.table("gift_consultations") \
+        .update(update_data) \
+        .eq("id", consultation_id) \
+        .eq("user_id", user_id) \
+        .execute()
+
+    if response.data and len(response.data) > 0:
+        row = response.data[0]
+        return {
+            "consultation_id": row.get("id"),
+            "is_favorite": row.get("is_favorite", False),
+            "visibility": row.get("visibility", "private"),
+            "title": row.get("title", ""),
+            "updated_at": row.get("updated_at"),
+        }
+
+    return None
+
+
+def delete_consultation(
+    supabase: Client,
+    consultation_id: str,
+    user_id: str,
+) -> Optional[Dict[str, str]]:
+    response = supabase.table("gift_consultations") \
+        .delete() \
+        .eq("id", consultation_id) \
+        .eq("user_id", user_id) \
+        .execute()
+
+    if response.data and len(response.data) > 0:
+        row = response.data[0]
+        return {"consultation_id": row.get("id")}
+
+    return None

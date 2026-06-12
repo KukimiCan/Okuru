@@ -140,10 +140,13 @@ a {
 }
 
 .button-primary,
-.button-secondary {
+.button-secondary,
+.button-danger {
   align-items: center;
+  border: 0;
   border-radius: 8px;
   display: inline-flex;
+  font: inherit;
   font-weight: 700;
   justify-content: center;
   min-height: 44px;
@@ -160,6 +163,12 @@ a {
   border: 1px solid #bcccdc;
   background: #ffffff;
   color: #243b53;
+}
+
+.button-danger {
+  background: #b91c1c;
+  color: #ffffff;
+  cursor: pointer;
 }
 
 .form-stack {
@@ -202,6 +211,30 @@ a {
   resize: vertical;
 }
 
+.checkbox-field {
+  align-items: center;
+  color: #243b53;
+  display: flex;
+  font-weight: 700;
+  gap: 10px;
+  min-height: 44px;
+}
+
+.checkbox-field input {
+  height: 18px;
+  width: 18px;
+}
+
+.management-panel {
+  background: #ffffff;
+  border: 1px solid #d9e2ec;
+  border-radius: 8px;
+  display: grid;
+  gap: 16px;
+  max-width: 760px;
+  padding: 18px;
+}
+
 .form-error,
 .notice {
   border-radius: 8px;
@@ -230,7 +263,9 @@ a {
   max-width: 680px;
 }
 
-.button-primary:disabled {
+.button-primary:disabled,
+.button-secondary:disabled,
+.button-danger:disabled {
   cursor: not-allowed;
   opacity: 0.65;
 }

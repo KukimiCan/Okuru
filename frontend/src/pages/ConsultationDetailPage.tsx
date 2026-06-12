@@ -1,23 +1,40 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { mockConsultationResult } from "../lib/mockData";
-import { getConsultation } from "../services/consultationService";
+import {
+  deleteConsultation,
+  getConsultation,
+  updateConsultation,
+} from "../services/consultationService";
 import type {
   ConsultationCreateResponse,
   ConsultationDetail,
   ConsultationResult,
+  Visibility,
 } from "../types/consultation";
+
+const visibilityLabels: Record<Visibility, string> = {
+  private: "非公開",
+  public: "公開",
+  unlisted: "限定公開",
+};
 
 export function ConsultationDetailPage() {
   const { consultationId } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const stateConsultation = (location.state as { consultation?: ConsultationCreateResponse })
     ?.consultation;
   const [result, setResult] = useState<ConsultationResult | null>(
     stateConsultation?.result ?? null,
   );
+  const [title, setTitle] = useState("");
+  const [visibility, setVisibility] = useState<Visibility>("private");
+  const [isFavorite, setIsFavorite] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (!consultationId || stateConsultation) {
@@ -25,7 +42,12 @@ export function ConsultationDetailPage() {
     }
 
     getConsultation(consultationId)
-      .then((data: ConsultationDetail) => setResult(data.result))
+      .then((data: ConsultationDetail) => {
+        setResult(data.result);
+        setTitle(data.title);
+        setVisibility(data.visibility);
+        setIsFavorite(data.is_favorite);
+      })
       .catch(() => {
         setResult(mockConsultationResult);
         setErrorMessage("APIから取得できないため、表示例を表示しています。");
@@ -33,6 +55,58 @@ export function ConsultationDetailPage() {
   }, [consultationId, stateConsultation]);
 
   const displayResult = result ?? mockConsultationResult;
+
+  async function handleUpdate() {
+    if (!consultationId) {
+      return;
+    }
+
+    setIsSaving(true);
+    setErrorMessage("");
+    setStatusMessage("");
+
+    try {
+      const updated = await updateConsultation(consultationId, {
+        title: title.trim() || "ギフト相談",
+        visibility,
+        is_favorite: isFavorite,
+      });
+      setTitle(updated.title);
+      setVisibility(updated.visibility);
+      setIsFavorite(updated.is_favorite);
+      setStatusMessage("相談履歴を更新しました。");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "相談履歴の更新に失敗しました。");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!consultationId) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `「${title || "この相談履歴"}」を削除します。削除すると元に戻せません。よろしいですか？`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setIsSaving(true);
+    setErrorMessage("");
+    setStatusMessage("");
+
+    try {
+      await deleteConsultation(consultationId);
+      navigate("/consultations", { replace: true });
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "相談履歴の削除に失敗しました。");
+      setIsSaving(false);
+    }
+  }
 
   return (
     <section className="detail-page">
@@ -47,6 +121,66 @@ export function ConsultationDetailPage() {
           {errorMessage}
         </div>
       ) : null}
+
+      {statusMessage ? (
+        <div className="notice" role="status">
+          {statusMessage}
+        </div>
+      ) : null}
+
+      <section className="management-panel" aria-label="相談履歴の管理">
+        <label className="field">
+          <span>タイトル</span>
+          <input
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder="ギフト相談"
+            value={title}
+          />
+        </label>
+
+        <div className="form-grid">
+          <label className="field">
+            <span>公開設定</span>
+            <select
+              onChange={(event) => setVisibility(event.target.value as Visibility)}
+              value={visibility}
+            >
+              {Object.entries(visibilityLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="checkbox-field">
+            <input
+              checked={isFavorite}
+              onChange={(event) => setIsFavorite(event.target.checked)}
+              type="checkbox"
+            />
+            <span>お気に入りにする</span>
+          </label>
+        </div>
+
+        <div className="action-row">
+          <button
+            className="button-primary"
+            disabled={isSaving || !consultationId}
+            onClick={() => void handleUpdate()}
+            type="button"
+          >
+            {isSaving ? "保存中..." : "保存する"}
+          </button>
+          <button
+            className="button-danger"
+            disabled={isSaving || !consultationId}
+            onClick={() => void handleDelete()}
+            type="button"
+          >
+            削除する
+          </button>
+        </div>
+      </section>
 
       <div className="card-grid">
         {displayResult.gift_candidates.map((candidate) => (
@@ -102,6 +236,9 @@ export function ConsultationDetailPage() {
         </Link>
         <Link className="button-secondary" to="/stories">
           体験談を見る
+        </Link>
+        <Link className="button-secondary" to="/consultations">
+          相談履歴へ戻る
         </Link>
       </div>
     </section>
