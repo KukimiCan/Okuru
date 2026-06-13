@@ -43,6 +43,15 @@ export type Story = StoryInput & {
   updated_at?: string;
 };
 
+export type StoryDraftSeed = {
+  title?: string;
+  relationship?: string;
+  purpose?: string;
+  budget_range?: string;
+  gift_item?: string;
+  keywords?: string;
+};
+
 export type StoryListQuery = {
   page?: number;
   limit?: number;

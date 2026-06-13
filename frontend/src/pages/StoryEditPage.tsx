@@ -1,8 +1,16 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
+import { LoadingSpinner } from "../components/feedback/LoadingSpinner";
 import { FormErrorList } from "../components/forms/FormErrorList";
 import { useAuth } from "../features/auth/AuthContext";
+import {
+  BUDGET_RANGE_OPTIONS,
+  PURPOSE_OPTIONS,
+  RELATIONSHIP_OPTIONS,
+  resultLabels,
+  visibilityLabels,
+} from "../lib/giftOptions";
 import { hasValidationErrors, validateStoryInput, type ValidationErrors } from "../lib/validation";
 import { getMyStory, updateStory } from "../services/storyService";
 import type { StoryInput, StoryResult } from "../types/story";
@@ -18,6 +26,10 @@ const initialForm = {
   visibility: "public" as StoryInput["visibility"],
   keywords: "",
 };
+
+function withCurrentValue(options: readonly string[], current: string) {
+  return options.includes(current) ? options : [current, ...options];
+}
 
 export function StoryEditPage() {
   const { storyId } = useParams();
@@ -110,7 +122,7 @@ export function StoryEditPage() {
 
     try {
       const updated = await updateStory(storyId, input);
-      navigate(input.visibility === "public" ? `/stories/${updated.story_id}` : "/mypage");
+      navigate(input.visibility === "private" ? "/mypage" : `/stories/${updated.story_id}`);
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -124,17 +136,18 @@ export function StoryEditPage() {
 
   if (isLoading) {
     return (
-      <section className="placeholder">
-        <p className="placeholder-label">Loading</p>
-        <h1>体験談を読み込んでいます</h1>
+      <section className="detail-page">
+        <LoadingSpinner fullSection label="体験談を読み込んでいます" />
       </section>
     );
   }
 
+  const relationshipOptions = withCurrentValue(RELATIONSHIP_OPTIONS, form.relationship);
+  const purposeOptions = withCurrentValue(PURPOSE_OPTIONS, form.purpose);
+
   return (
     <section className="form-page">
       <div>
-        <p className="placeholder-label">Edit Story</p>
         <h1>体験談を編集</h1>
         <p>投稿済みの体験談を見直し、贈ったものや結果、本文を更新できます。</p>
       </div>
@@ -158,19 +171,29 @@ export function StoryEditPage() {
         <div className="form-grid">
           <label className="field">
             <span>関係性</span>
-            <input
+            <select
               onChange={(event) => updateField("relationship", event.target.value)}
-              required
               value={form.relationship}
-            />
+            >
+              {relationshipOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
           </label>
           <label className="field">
             <span>目的</span>
-            <input
+            <select
               onChange={(event) => updateField("purpose", event.target.value)}
-              required
               value={form.purpose}
-            />
+            >
+              {purposeOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
           </label>
           <label className="field">
             <span>予算帯</span>
@@ -178,10 +201,11 @@ export function StoryEditPage() {
               onChange={(event) => updateField("budget_range", event.target.value)}
               value={form.budget_range}
             >
-              <option value="1000-3000">1,000-3,000円</option>
-              <option value="3000-5000">3,000-5,000円</option>
-              <option value="5000-10000">5,000-10,000円</option>
-              <option value="10000+">10,000円以上</option>
+              {BUDGET_RANGE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </label>
           <label className="field">
@@ -190,9 +214,11 @@ export function StoryEditPage() {
               onChange={(event) => updateField("result", event.target.value as StoryResult)}
               value={form.result}
             >
-              <option value="success">成功</option>
-              <option value="normal">普通</option>
-              <option value="failure">失敗</option>
+              {Object.entries(resultLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
             </select>
           </label>
         </div>
@@ -224,16 +250,18 @@ export function StoryEditPage() {
               }
               value={form.visibility}
             >
-              <option value="public">公開</option>
-              <option value="unlisted">限定公開</option>
-              <option value="private">非公開</option>
+              {Object.entries(visibilityLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
             </select>
           </label>
           <label className="field">
             <span>キーワード</span>
             <input
               onChange={(event) => updateField("keywords", event.target.value)}
-              placeholder="coffee, practical"
+              placeholder="コーヒー, 実用的"
               value={form.keywords}
             />
           </label>
