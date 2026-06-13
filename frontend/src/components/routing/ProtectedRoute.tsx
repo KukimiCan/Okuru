@@ -17,9 +17,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (isLoading) {
     return (
-      <section className="placeholder">
-        <p className="placeholder-label">Loading</p>
-        <h1>認証状態を確認しています</h1>
+      <section className="detail-page">
+        <div>
+          <h1>認証状態を確認しています</h1>
+        </div>
       </section>
     );
   }

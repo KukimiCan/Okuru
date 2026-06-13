@@ -1,15 +1,22 @@
 import { FormEvent, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { FormErrorList } from "../components/forms/FormErrorList";
+import {
+  BUDGET_RANGE_OPTIONS,
+  PURPOSE_OPTIONS,
+  RELATIONSHIP_OPTIONS,
+  resultLabels,
+  visibilityLabels,
+} from "../lib/giftOptions";
 import { hasValidationErrors, validateStoryInput, type ValidationErrors } from "../lib/validation";
 import { createStory } from "../services/storyService";
-import type { StoryInput, StoryResult } from "../types/story";
+import type { StoryDraftSeed, StoryInput, StoryResult } from "../types/story";
 
 const initialForm = {
   title: "",
-  relationship: "",
-  purpose: "",
+  relationship: RELATIONSHIP_OPTIONS[0] as string,
+  purpose: PURPOSE_OPTIONS[0] as string,
   budget_range: "3000-5000",
   gift_item: "",
   result: "success" as StoryResult,
@@ -20,7 +27,17 @@ const initialForm = {
 
 export function StoryNewPage() {
   const navigate = useNavigate();
-  const [form, setForm] = useState(initialForm);
+  const location = useLocation();
+  const draft = (location.state as { storyDraft?: StoryDraftSeed } | null)?.storyDraft;
+  const [form, setForm] = useState(() => ({
+    ...initialForm,
+    ...(draft?.title ? { title: draft.title } : {}),
+    ...(draft?.relationship ? { relationship: draft.relationship } : {}),
+    ...(draft?.purpose ? { purpose: draft.purpose } : {}),
+    ...(draft?.budget_range ? { budget_range: draft.budget_range } : {}),
+    ...(draft?.gift_item ? { gift_item: draft.gift_item } : {}),
+    ...(draft?.keywords ? { keywords: draft.keywords } : {}),
+  }));
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -65,7 +82,7 @@ export function StoryNewPage() {
 
     try {
       const created = await createStory(input);
-      navigate(`/stories/${created.id}`);
+      navigate(input.visibility === "private" ? "/mypage" : `/stories/${created.id}`);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "体験談の投稿に失敗しました。");
     } finally {
@@ -76,10 +93,15 @@ export function StoryNewPage() {
   return (
     <section className="form-page">
       <div>
-        <p className="placeholder-label">New Story</p>
         <h1>体験談投稿</h1>
         <p>実際に贈ったもの、結果、学びを共有できます。</p>
       </div>
+
+      {draft ? (
+        <div className="notice" role="status">
+          AI相談の内容を入力欄に反映しました。実際に贈った結果や感想に書き換えて投稿してください。
+        </div>
+      ) : null}
 
       <form className="form-stack wide-form" onSubmit={handleSubmit}>
         <label className="field">
@@ -95,21 +117,29 @@ export function StoryNewPage() {
         <div className="form-grid">
           <label className="field">
             <span>関係性</span>
-            <input
+            <select
               onChange={(event) => updateField("relationship", event.target.value)}
-              placeholder="friend"
-              required
               value={form.relationship}
-            />
+            >
+              {RELATIONSHIP_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
           </label>
           <label className="field">
             <span>目的</span>
-            <input
+            <select
               onChange={(event) => updateField("purpose", event.target.value)}
-              placeholder="birthday"
-              required
               value={form.purpose}
-            />
+            >
+              {PURPOSE_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
           </label>
           <label className="field">
             <span>予算帯</span>
@@ -117,10 +147,11 @@ export function StoryNewPage() {
               onChange={(event) => updateField("budget_range", event.target.value)}
               value={form.budget_range}
             >
-              <option value="1000-3000">1,000-3,000円</option>
-              <option value="3000-5000">3,000-5,000円</option>
-              <option value="5000-10000">5,000-10,000円</option>
-              <option value="10000+">10,000円以上</option>
+              {BUDGET_RANGE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </label>
           <label className="field">
@@ -129,9 +160,11 @@ export function StoryNewPage() {
               onChange={(event) => updateField("result", event.target.value as StoryResult)}
               value={form.result}
             >
-              <option value="success">成功</option>
-              <option value="normal">普通</option>
-              <option value="failure">失敗</option>
+              {Object.entries(resultLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
             </select>
           </label>
         </div>
@@ -165,15 +198,18 @@ export function StoryNewPage() {
               }
               value={form.visibility}
             >
-              <option value="public">公開</option>
-              <option value="private">非公開</option>
+              {Object.entries(visibilityLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
             </select>
           </label>
           <label className="field">
             <span>キーワード</span>
             <input
               onChange={(event) => updateField("keywords", event.target.value)}
-              placeholder="coffee, practical"
+              placeholder="コーヒー, 実用的"
               value={form.keywords}
             />
           </label>

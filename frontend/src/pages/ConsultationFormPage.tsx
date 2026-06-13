@@ -2,6 +2,7 @@ import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { FormErrorList } from "../components/forms/FormErrorList";
+import { PURPOSE_OPTIONS, RELATIONSHIP_OPTIONS } from "../lib/giftOptions";
 import {
   hasValidationErrors,
   validateConsultationInput,
@@ -13,8 +14,8 @@ import type { ConsultationInput } from "../types/consultation";
 const initialForm = {
   recipient_age_group: "20s",
   recipient_gender: "unspecified",
-  relationship: "",
-  purpose: "",
+  relationship: RELATIONSHIP_OPTIONS[0],
+  purpose: PURPOSE_OPTIONS[0],
   budget_min: "3000",
   budget_max: "5000",
   hobbies: "",
@@ -87,7 +88,6 @@ export function ConsultationFormPage() {
   return (
     <section className="form-page">
       <div>
-        <p className="placeholder-label">AI Consultation</p>
         <h1>AIギフト相談</h1>
         <p>贈る相手の条件を入力して、候補・理由・注意点をまとめて相談します。</p>
       </div>
@@ -124,22 +124,30 @@ export function ConsultationFormPage() {
 
           <label className="field">
             <span>関係性</span>
-            <input
+            <select
               onChange={(event) => updateField("relationship", event.target.value)}
-              placeholder="友人、恋人、家族、同僚など"
-              required
               value={form.relationship}
-            />
+            >
+              {RELATIONSHIP_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
           </label>
 
           <label className="field">
             <span>目的</span>
-            <input
+            <select
               onChange={(event) => updateField("purpose", event.target.value)}
-              placeholder="誕生日、記念日、お礼など"
-              required
               value={form.purpose}
-            />
+            >
+              {PURPOSE_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
           </label>
 
           <label className="field">

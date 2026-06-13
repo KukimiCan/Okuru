@@ -1,9 +1,15 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { signInWithEmail } from "../services/authService";
 import { isSupabaseConfigured } from "../lib/supabase";
 import { useAuth } from "../features/auth/AuthContext";
+
+type LoginState = {
+  from?: {
+    pathname?: string;
+  };
+};
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -14,12 +20,15 @@ export function LoginPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const redirectTo =
-    typeof location.state === "object" &&
-    location.state !== null &&
-    "from" in location.state
-      ? `${location.state.from}`
-      : "/mypage";
+  const state = location.state as LoginState | null;
+  const redirectTo = state?.from?.pathname || "/mypage";
+  const requiresLogin = Boolean(state?.from);
+
+  useEffect(() => {
+    if (user) {
+      navigate(redirectTo, { replace: true });
+    }
+  }, [user, redirectTo, navigate]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -40,9 +49,8 @@ export function LoginPage() {
     return (
       <section className="form-page">
         <div>
-          <p className="placeholder-label">Account</p>
-          <h1>ログイン済みです</h1>
-          <p>このアカウントで認証が必要なページを利用できます。</p>
+          <h1>マイページへ移動します</h1>
+          <p>ログイン済みのため、自動的に移動します。</p>
         </div>
       </section>
     );
@@ -51,10 +59,15 @@ export function LoginPage() {
   return (
     <section className="form-page">
       <div>
-        <p className="placeholder-label">Account</p>
         <h1>ログイン</h1>
         <p>メールアドレスとパスワードでログインします。</p>
       </div>
+
+      {requiresLogin ? (
+        <div className="notice" role="status">
+          この機能を利用するにはログインが必要です。
+        </div>
+      ) : null}
 
       {!isSupabaseConfigured ? (
         <div className="notice" role="alert">

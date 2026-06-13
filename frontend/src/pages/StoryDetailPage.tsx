@@ -1,25 +1,23 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
+import { ConfirmDialog } from "../components/feedback/ConfirmDialog";
+import { LoadingSpinner } from "../components/feedback/LoadingSpinner";
 import { useAuth } from "../features/auth/AuthContext";
-import { mockStories } from "../lib/mockData";
+import { formatBudgetRange, resultLabels } from "../lib/giftOptions";
 import { deleteStory, getStory } from "../services/storyService";
-import type { Story, StoryResult } from "../types/story";
-
-const resultLabels: Record<StoryResult, string> = {
-  success: "成功",
-  normal: "普通",
-  failure: "失敗",
-};
+import type { Story } from "../types/story";
 
 export function StoryDetailPage() {
   const { storyId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [story, setStory] = useState<Story | null>(null);
-  const [notice, setNotice] = useState("");
+  const [notFound, setNotFound] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [deleteError, setDeleteError] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (!storyId) {
@@ -29,30 +27,22 @@ export function StoryDetailPage() {
     getStory(storyId)
       .then((data) => {
         setStory(data);
-        setNotice("");
+        setNotFound(false);
       })
       .catch(() => {
-        setStory(mockStories.find((item) => item.id === storyId) ?? mockStories[0]);
-        setNotice("APIから取得できないため、表示例を表示しています。");
-      });
+        setNotFound(true);
+      })
+      .finally(() => setIsLoading(false));
   }, [storyId]);
 
-  const displayStory = story ?? mockStories[0];
-  const canEdit = Boolean(user && displayStory.user_id && displayStory.user_id === user.id);
+  const canEdit = Boolean(user && story?.user_id && story.user_id === user.id);
 
   async function handleDelete() {
     if (!storyId || isDeleting) {
       return;
     }
 
-    const confirmed = window.confirm(
-      "この体験談を削除します。削除すると元に戻せません。よろしいですか？",
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
+    setShowDeleteConfirm(false);
     setDeleteError("");
     setIsDeleting(true);
 
@@ -68,19 +58,36 @@ export function StoryDetailPage() {
     }
   }
 
+  if (isLoading) {
+    return (
+      <section className="detail-page">
+        <LoadingSpinner fullSection label="体験談を読み込んでいます" />
+      </section>
+    );
+  }
+
+  if (notFound || !story) {
+    return (
+      <section className="detail-page">
+        <div>
+          <h1>体験談が見つかりません</h1>
+          <p>指定された体験談は存在しないか、非公開に設定されています。</p>
+        </div>
+        <div className="action-row">
+          <Link className="button-primary" to="/stories">
+            体験談一覧へ戻る
+          </Link>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="detail-page">
       <div>
-        <p className="placeholder-label">Gift Story</p>
-        <h1>{displayStory.title}</h1>
-        <p>{displayStory.body}</p>
+        <h1>{story.title}</h1>
+        <p>{story.body}</p>
       </div>
-
-      {notice ? (
-        <div className="notice" role="status">
-          {notice}
-        </div>
-      ) : null}
 
       {deleteError ? (
         <p className="form-error" role="alert">
@@ -91,34 +98,34 @@ export function StoryDetailPage() {
       <div className="section-grid">
         <article className="info-panel">
           <h2>結果</h2>
-          <p>{resultLabels[displayStory.result]}</p>
+          <p>{resultLabels[story.result]}</p>
         </article>
         <article className="info-panel">
           <h2>贈ったもの</h2>
-          <p>{displayStory.gift_item}</p>
+          <p>{story.gift_item}</p>
         </article>
         <article className="info-panel">
           <h2>予算帯</h2>
-          <p>{displayStory.budget_range}円</p>
+          <p>{formatBudgetRange(story.budget_range)}</p>
         </article>
       </div>
 
       <dl className="detail-list">
         <div>
           <dt>関係性</dt>
-          <dd>{displayStory.relationship}</dd>
+          <dd>{story.relationship}</dd>
         </div>
         <div>
           <dt>目的</dt>
-          <dd>{displayStory.purpose}</dd>
+          <dd>{story.purpose}</dd>
         </div>
         <div>
           <dt>キーワード</dt>
-          <dd>{displayStory.keywords.join(", ") || "なし"}</dd>
+          <dd>{story.keywords.join(", ") || "なし"}</dd>
         </div>
         <div>
           <dt>投稿日</dt>
-          <dd>{new Date(displayStory.created_at).toLocaleDateString("ja-JP")}</dd>
+          <dd>{new Date(story.created_at).toLocaleDateString("ja-JP")}</dd>
         </div>
       </dl>
 
@@ -132,7 +139,7 @@ export function StoryDetailPage() {
           <button
             className="button-danger"
             disabled={isDeleting}
-            onClick={() => void handleDelete()}
+            onClick={() => setShowDeleteConfirm(true)}
             type="button"
           >
             {isDeleting ? "削除中..." : "削除する"}
@@ -142,6 +149,15 @@ export function StoryDetailPage() {
           一覧へ戻る
         </Link>
       </div>
+
+      {showDeleteConfirm ? (
+        <ConfirmDialog
+          message="この体験談を削除します。削除すると元に戻せません。よろしいですか？"
+          onCancel={() => setShowDeleteConfirm(false)}
+          onConfirm={() => void handleDelete()}
+          title="体験談を削除"
+        />
+      ) : null}
     </section>
   );
 }
