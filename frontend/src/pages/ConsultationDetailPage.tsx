@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { ConfirmDialog } from "../components/feedback/ConfirmDialog";
 import { LoadingSpinner } from "../components/feedback/LoadingSpinner";
 import { Modal } from "../components/feedback/Modal";
+import { Reveal } from "../components/motion/Reveal";
 import { estimateBudgetRange, visibilityLabels } from "../lib/giftOptions";
 import {
   deleteConsultation,
@@ -168,63 +169,69 @@ export function ConsultationDetailPage() {
         </div>
       ) : null}
 
-      <div className="split-layout">
-        <div className="split-main">
-          <div>
-            <h2 className="section-title">候補一覧</h2>
-            <p>気になる候補をクリックすると、詳しい理由や注意点をポップアップで確認できます。</p>
-          </div>
+      <div>
+        <h2 className="section-title">候補一覧</h2>
+        <p>気になる候補をクリックすると、詳しい理由や注意点をポップアップで確認できます。</p>
+      </div>
 
-          <div className="card-grid">
+      <div className="card-grid">
             {displayResult.gift_candidates.map((candidate, index) => {
               const isSelected = index === selectedCandidateIndex;
 
               return (
-                <article
-                  aria-pressed={isSelected}
-                  className={isSelected ? "result-card result-card-selected" : "result-card"}
-                  key={candidate.name}
-                  onClick={() => {
-                    setSelectedCandidateIndex(index);
-                    setIsDetailOpen(true);
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
+                <Reveal delay={index * 0.05} key={candidate.name}>
+                  <article
+                    aria-pressed={isSelected}
+                    className={isSelected ? "result-card result-card-selected" : "result-card"}
+                    onClick={() => {
                       setSelectedCandidateIndex(index);
                       setIsDetailOpen(true);
-                    }
-                  }}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <div>
-                    <p className="placeholder-label">{candidate.budget_range}</p>
-                    <h2>{candidate.name}</h2>
-                  </div>
-                  <p>{candidate.reason}</p>
-                </article>
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        setSelectedCandidateIndex(index);
+                        setIsDetailOpen(true);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    {isSelected ? <span className="card-stamp">選択中</span> : null}
+                    <div>
+                      <p className="placeholder-label">{candidate.budget_range}</p>
+                      <h2>{candidate.name}</h2>
+                    </div>
+                    <p>{candidate.reason}</p>
+                  </article>
+                </Reveal>
               );
             })}
           </div>
 
+      <div className="split-layout">
+        <div className="split-main">
           <div className="section-grid">
-            <article className="info-panel">
-              <h2>選び方のコツ</h2>
-              <ul>
-                {displayResult.tips.map((tip) => (
-                  <li key={tip}>{tip}</li>
-                ))}
-              </ul>
-            </article>
-            <article className="info-panel">
-              <h2>避けた方がよいこと</h2>
-              <ul>
-                {displayResult.avoid.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </article>
+            <Reveal>
+              <article className="info-panel">
+                <h2>選び方のコツ</h2>
+                <ul>
+                  {displayResult.tips.map((tip) => (
+                    <li key={tip}>{tip}</li>
+                  ))}
+                </ul>
+              </article>
+            </Reveal>
+            <Reveal delay={0.05}>
+              <article className="info-panel">
+                <h2>避けた方がよいこと</h2>
+                <ul>
+                  {displayResult.avoid.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </article>
+            </Reveal>
           </div>
         </div>
 

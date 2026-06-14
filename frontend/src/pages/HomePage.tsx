@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { motion } from "motion/react";
 
 import { Modal } from "../components/feedback/Modal";
+import { TiltCard } from "../components/motion/TiltCard";
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 },
+};
 
 type BentoItem = {
   title: string;
@@ -56,46 +63,97 @@ export function HomePage() {
   return (
     <div className="home-page">
       <section className="home-hero">
+        <motion.div
+          animate={{ opacity: 0.5, scale: 1, x: [0, 18, 0], y: [0, -14, 0] }}
+          aria-hidden="true"
+          className="home-hero-glow"
+          initial={{ opacity: 0, scale: 0.8 }}
+          transition={{
+            opacity: { duration: 0.6 },
+            scale: { duration: 0.6 },
+            x: { duration: 9, ease: "easeInOut", repeat: Infinity },
+            y: { duration: 7, ease: "easeInOut", repeat: Infinity },
+          }}
+        />
+        <motion.div
+          animate={{ opacity: 0.35, rotate: [0, 12, 0], scale: 1, x: [0, -14, 0], y: [0, 16, 0] }}
+          aria-hidden="true"
+          className="home-hero-orb"
+          initial={{ opacity: 0, scale: 0.6 }}
+          transition={{
+            opacity: { delay: 0.2, duration: 0.6 },
+            rotate: { duration: 12, ease: "easeInOut", repeat: Infinity },
+            scale: { delay: 0.2, duration: 0.6 },
+            x: { duration: 8, ease: "easeInOut", repeat: Infinity },
+            y: { duration: 10, ease: "easeInOut", repeat: Infinity },
+          }}
+        />
         <div>
-          <p className="placeholder-label">AIギフトアドバイザー</p>
-          <h1>贈り物選びに、もう迷わない。</h1>
-          <p>
+          <motion.p
+            animate="visible"
+            className="placeholder-label"
+            initial="hidden"
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            variants={fadeUp}
+          >
+            AIギフトアドバイザー
+          </motion.p>
+          <motion.h1
+            animate="visible"
+            initial="hidden"
+            transition={{ delay: 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            variants={fadeUp}
+          >
+            贈り物選びに、<span className="text-highlight">もう迷わない</span>。
+          </motion.h1>
+          <motion.p
+            animate="visible"
+            initial="hidden"
+            transition={{ delay: 0.16, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            variants={fadeUp}
+          >
             相手の特徴や関係性、予算を伝えるだけでAIがギフト候補を整理。実際に贈った人の体験談も合わせて確認できます。
-          </p>
+          </motion.p>
         </div>
-        <div className="action-row">
+        <motion.div
+          animate="visible"
+          className="action-row"
+          initial="hidden"
+          transition={{ delay: 0.24, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          variants={fadeUp}
+        >
           <Link className="button-primary" to="/consultations/new">
             AI相談を始める
           </Link>
           <Link className="button-secondary" to="/stories">
             体験談を見る
           </Link>
-        </div>
+        </motion.div>
       </section>
 
       <div className="bento-grid">
         {features.map((feature, index) => (
-          <button
+          <TiltCard
             className="bento-tile bento-tile-feature"
+            delay={index * 0.06}
             key={feature.title}
             onClick={() => setActiveFeature(index)}
-            type="button"
           >
             <h2>{feature.title}</h2>
             <p>{feature.teaser}</p>
-          </button>
+          </TiltCard>
         ))}
         {steps.map((step, index) => (
-          <button
+          <TiltCard
             className="bento-tile bento-tile-step"
+            delay={(features.length + index) * 0.06}
             key={step.title}
             onClick={() => setActiveStep(index)}
-            type="button"
           >
             <span className="step-number">{index + 1}</span>
             <h2>{step.title}</h2>
             <p>{step.teaser}</p>
-          </button>
+          </TiltCard>
         ))}
       </div>
 

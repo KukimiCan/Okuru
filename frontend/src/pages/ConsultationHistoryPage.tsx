@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import { ConfirmDialog } from "../components/feedback/ConfirmDialog";
 import { LoadingSpinner } from "../components/feedback/LoadingSpinner";
+import { Reveal } from "../components/motion/Reveal";
 import { visibilityBadgeClasses, visibilityLabels } from "../lib/giftOptions";
 import {
   deleteConsultation,
@@ -139,45 +140,47 @@ export function ConsultationHistoryPage() {
 
         {!isLoading && consultations.length > 0 ? (
           <div className="history-list">
-            {consultations.map((consultation) => (
-              <article className="history-item" key={consultation.id}>
-                <div>
-                  <div className="meta-row">
-                    <span
-                      className={`status-badge ${visibilityBadgeClasses[consultation.visibility]}`}
-                    >
-                      {visibilityLabels[consultation.visibility]}
-                    </span>
-                    {consultation.is_favorite ? (
-                      <span className="status-badge status-badge-accent">お気に入り</span>
-                    ) : null}
+            {consultations.map((consultation, index) => (
+              <Reveal delay={Math.min(index, 4) * 0.05} key={consultation.id}>
+                <article className="history-item">
+                  <div>
+                    <div className="meta-row">
+                      <span
+                        className={`status-badge ${visibilityBadgeClasses[consultation.visibility]}`}
+                      >
+                        {visibilityLabels[consultation.visibility]}
+                      </span>
+                      {consultation.is_favorite ? (
+                        <span className="status-badge status-badge-accent">お気に入り</span>
+                      ) : null}
+                    </div>
+                    <h2>{consultation.title}</h2>
+                    <p>{formatDate(consultation.created_at)}</p>
                   </div>
-                  <h2>{consultation.title}</h2>
-                  <p>{formatDate(consultation.created_at)}</p>
-                </div>
 
-                <div className="action-row">
-                  <Link className="button-secondary" to={`/consultations/${consultation.id}`}>
-                    詳細を見る
-                  </Link>
-                  <button
-                    className="button-secondary"
-                    disabled={pendingId === consultation.id}
-                    onClick={() => void handleFavoriteToggle(consultation)}
-                    type="button"
-                  >
-                    {consultation.is_favorite ? "お気に入り解除" : "お気に入り"}
-                  </button>
-                  <button
-                    className="button-danger"
-                    disabled={pendingId === consultation.id}
-                    onClick={() => setDeleteTarget(consultation)}
-                    type="button"
-                  >
-                    削除する
-                  </button>
-                </div>
-              </article>
+                  <div className="action-row">
+                    <Link className="button-secondary" to={`/consultations/${consultation.id}`}>
+                      詳細を見る
+                    </Link>
+                    <button
+                      className="button-secondary"
+                      disabled={pendingId === consultation.id}
+                      onClick={() => void handleFavoriteToggle(consultation)}
+                      type="button"
+                    >
+                      {consultation.is_favorite ? "お気に入り解除" : "お気に入り"}
+                    </button>
+                    <button
+                      className="button-danger"
+                      disabled={pendingId === consultation.id}
+                      onClick={() => setDeleteTarget(consultation)}
+                      type="button"
+                    >
+                      削除する
+                    </button>
+                  </div>
+                </article>
+              </Reveal>
             ))}
           </div>
         ) : null}

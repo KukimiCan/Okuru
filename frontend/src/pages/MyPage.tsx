@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import { ConfirmDialog } from "../components/feedback/ConfirmDialog";
 import { LoadingSpinner } from "../components/feedback/LoadingSpinner";
+import { Reveal } from "../components/motion/Reveal";
 import { useAuth } from "../features/auth/AuthContext";
 import {
   formatBudgetRange,
@@ -104,44 +105,46 @@ export function MyPage() {
 
         {!isLoading && stories.length > 0 ? (
           <div className="card-grid">
-            {stories.map((story) => (
-              <article className="result-card" key={story.id}>
-                <div>
-                  <div className="meta-row">
-                    <p
-                      className={`placeholder-label ${visibilityBadgeClasses[story.visibility]}`}
-                    >
-                      {visibilityLabels[story.visibility]}
-                    </p>
-                    <p className={`placeholder-label ${resultBadgeClasses[story.result]}`}>
-                      {resultLabels[story.result]}
+            {stories.map((story, index) => (
+              <Reveal delay={Math.min(index, 4) * 0.05} key={story.id}>
+                <article className="result-card">
+                  <div>
+                    <div className="meta-row">
+                      <p
+                        className={`placeholder-label ${visibilityBadgeClasses[story.visibility]}`}
+                      >
+                        {visibilityLabels[story.visibility]}
+                      </p>
+                      <p className={`placeholder-label ${resultBadgeClasses[story.result]}`}>
+                        {resultLabels[story.result]}
+                      </p>
+                    </div>
+                    <h2>{story.title}</h2>
+                    <p className="card-meta">
+                      {formatBudgetRange(story.budget_range)} ・{" "}
+                      {new Date(story.created_at).toLocaleDateString("ja-JP")} 作成
                     </p>
                   </div>
-                  <h2>{story.title}</h2>
-                  <p className="card-meta">
-                    {formatBudgetRange(story.budget_range)} ・{" "}
-                    {new Date(story.created_at).toLocaleDateString("ja-JP")} 作成
-                  </p>
-                </div>
-                <div className="action-row">
-                  {story.visibility !== "private" ? (
-                    <Link className="button-secondary" to={`/stories/${story.id}`}>
-                      詳細を見る
+                  <div className="action-row">
+                    {story.visibility !== "private" ? (
+                      <Link className="button-secondary" to={`/stories/${story.id}`}>
+                        詳細を見る
+                      </Link>
+                    ) : null}
+                    <Link className="button-primary" to={`/stories/${story.id}/edit`}>
+                      編集する
                     </Link>
-                  ) : null}
-                  <Link className="button-primary" to={`/stories/${story.id}/edit`}>
-                    編集する
-                  </Link>
-                  <button
-                    className="button-danger"
-                    disabled={deletingStoryId === story.id}
-                    onClick={() => setDeleteTarget(story)}
-                    type="button"
-                  >
-                    {deletingStoryId === story.id ? "削除中..." : "削除する"}
-                  </button>
-                </div>
-              </article>
+                    <button
+                      className="button-danger"
+                      disabled={deletingStoryId === story.id}
+                      onClick={() => setDeleteTarget(story)}
+                      type="button"
+                    >
+                      {deletingStoryId === story.id ? "削除中..." : "削除する"}
+                    </button>
+                  </div>
+                </article>
+              </Reveal>
             ))}
           </div>
         ) : null}
