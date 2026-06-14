@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { LoadingSpinner } from "../components/feedback/LoadingSpinner";
+import { Reveal } from "../components/motion/Reveal";
 import {
   BUDGET_RANGE_OPTIONS,
   PURPOSE_OPTIONS,
@@ -170,26 +171,28 @@ export function StoryListPage() {
           <>
             <p className="count-label">{total}件の体験談</p>
             <div className="card-grid">
-              {stories.map((story) => (
-                <article className="result-card" key={story.id}>
-                  <div>
-                    <div className="meta-row">
-                      <p className={`placeholder-label ${resultBadgeClasses[story.result]}`}>
-                        {resultLabels[story.result]}
-                      </p>
-                      <p className="placeholder-label placeholder-label-neutral">
-                        {formatBudgetRange(story.budget_range)}
+              {stories.map((story, index) => (
+                <Reveal delay={Math.min(index, 4) * 0.05} key={story.id}>
+                  <article className="result-card">
+                    <div>
+                      <div className="meta-row">
+                        <p className={`placeholder-label ${resultBadgeClasses[story.result]}`}>
+                          {resultLabels[story.result]}
+                        </p>
+                        <p className="placeholder-label placeholder-label-neutral">
+                          {formatBudgetRange(story.budget_range)}
+                        </p>
+                      </div>
+                      <h2>{story.title}</h2>
+                      <p className="card-meta">
+                        {new Date(story.created_at).toLocaleDateString("ja-JP")} 投稿
                       </p>
                     </div>
-                    <h2>{story.title}</h2>
-                    <p className="card-meta">
-                      {new Date(story.created_at).toLocaleDateString("ja-JP")} 投稿
-                    </p>
-                  </div>
-                  <Link className="button-secondary" to={`/stories/${story.id}`}>
-                    詳細を見る
-                  </Link>
-                </article>
+                    <Link className="button-secondary" to={`/stories/${story.id}`}>
+                      詳細を見る
+                    </Link>
+                  </article>
+                </Reveal>
               ))}
             </div>
           </>

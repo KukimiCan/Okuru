@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { ConfirmDialog } from "../components/feedback/ConfirmDialog";
 import { LoadingSpinner } from "../components/feedback/LoadingSpinner";
+import { Reveal } from "../components/motion/Reveal";
 import { useAuth } from "../features/auth/AuthContext";
 import { formatBudgetRange, resultLabels } from "../lib/giftOptions";
 import { deleteStory, getStory } from "../services/storyService";
@@ -84,70 +85,90 @@ export function StoryDetailPage() {
 
   return (
     <section className="detail-page">
-      <div>
-        <h1>{story.title}</h1>
-        <p>{story.body}</p>
-      </div>
+      <div className="split-layout story-layout">
+        <div className="split-main">
+          <article className="story-article">
+            <h1>{story.title}</h1>
+            <p className="story-body">{story.body}</p>
+          </article>
 
-      {deleteError ? (
-        <p className="form-error" role="alert">
-          {deleteError}
-        </p>
-      ) : null}
+          {deleteError ? (
+            <p className="form-error" role="alert">
+              {deleteError}
+            </p>
+          ) : null}
 
-      <div className="section-grid">
-        <article className="info-panel">
-          <h2>結果</h2>
-          <p>{resultLabels[story.result]}</p>
-        </article>
-        <article className="info-panel">
-          <h2>贈ったもの</h2>
-          <p>{story.gift_item}</p>
-        </article>
-        <article className="info-panel">
-          <h2>予算帯</h2>
-          <p>{formatBudgetRange(story.budget_range)}</p>
-        </article>
-      </div>
+          <div className="action-row">
+            {canEdit && storyId ? (
+              <Link className="button-primary" to={`/stories/${storyId}/edit`}>
+                編集する
+              </Link>
+            ) : null}
+            {canEdit ? (
+              <button
+                className="button-danger"
+                disabled={isDeleting}
+                onClick={() => setShowDeleteConfirm(true)}
+                type="button"
+              >
+                {isDeleting ? "削除中..." : "削除する"}
+              </button>
+            ) : null}
+            <Link className="button-secondary" to="/stories">
+              一覧へ戻る
+            </Link>
+          </div>
+        </div>
 
-      <dl className="detail-list">
-        <div>
-          <dt>関係性</dt>
-          <dd>{story.relationship}</dd>
-        </div>
-        <div>
-          <dt>目的</dt>
-          <dd>{story.purpose}</dd>
-        </div>
-        <div>
-          <dt>キーワード</dt>
-          <dd>{story.keywords.join(", ") || "なし"}</dd>
-        </div>
-        <div>
-          <dt>投稿日</dt>
-          <dd>{new Date(story.created_at).toLocaleDateString("ja-JP")}</dd>
-        </div>
-      </dl>
-
-      <div className="action-row">
-        {canEdit && storyId ? (
-          <Link className="button-primary" to={`/stories/${storyId}/edit`}>
-            編集する
-          </Link>
-        ) : null}
-        {canEdit ? (
-          <button
-            className="button-danger"
-            disabled={isDeleting}
-            onClick={() => setShowDeleteConfirm(true)}
-            type="button"
-          >
-            {isDeleting ? "削除中..." : "削除する"}
-          </button>
-        ) : null}
-        <Link className="button-secondary" to="/stories">
-          一覧へ戻る
-        </Link>
+        <aside className="split-side">
+          <Reveal>
+            <section className="management-panel story-meta" aria-label="体験談の情報">
+              <h2>この体験談について</h2>
+              <dl className="info-list">
+                <div>
+                  <dt>結果</dt>
+                  <dd>{resultLabels[story.result]}</dd>
+                </div>
+                <div>
+                  <dt>贈ったもの</dt>
+                  <dd>{story.gift_item}</dd>
+                </div>
+                <div>
+                  <dt>予算帯</dt>
+                  <dd>{formatBudgetRange(story.budget_range)}</dd>
+                </div>
+                <div>
+                  <dt>関係性</dt>
+                  <dd>{story.relationship}</dd>
+                </div>
+                <div>
+                  <dt>目的</dt>
+                  <dd>{story.purpose}</dd>
+                </div>
+                <div>
+                  <dt>投稿日</dt>
+                  <dd>{new Date(story.created_at).toLocaleDateString("ja-JP")}</dd>
+                </div>
+                <div>
+                  <dt>キーワード</dt>
+                  <dd>
+                    {story.keywords.length > 0 ? (
+                      <ul className="tag-list">
+                        {story.keywords.map((keyword) => (
+                          <li className="tag-chip" key={keyword}>
+                            {keyword}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      "なし"
+                    )}
+                  </dd>
+                </div>
+              </dl>
+            </section>
+          </Reveal>
+        </aside>
       </div>
 
       {showDeleteConfirm ? (
